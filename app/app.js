@@ -61,6 +61,9 @@
   }
 
   function renderError() {
+    app.className = '';
+    app.style.transform = '';
+    app.style.transition = '';
     app.innerHTML = `<div class="home"><header class="hero">
       <div class="home-cross" aria-hidden="true">☩</div>
       <h1>ვერ ჩაიტვირთა</h1>
@@ -126,6 +129,9 @@
       ${extra ? `<h2 class="home-sect">ლოცვანი და განგებანი</h2>${extra}` : ''}
       <p class="foot">ტექსტი და თქვენი ადგილი ინახება ამ მოწყობილობაზე</p>
     </div>`;
+    app.className = '';
+    app.style.transform = '';
+    app.style.transition = '';
     app.querySelectorAll('.svc-card').forEach((b) =>
       b.addEventListener('click', () => { location.hash = '/' + b.dataset.id; }));
     app.querySelector('.theme-btn').addEventListener('click', (e) => {
@@ -194,6 +200,9 @@
 
   function renderReader(svc) {
     document.title = svc.name + ' · მეუფის კონდაკი';
+    app.className = 'view-reader';
+    app.style.transform = '';
+    app.style.transition = '';
     app.innerHTML = `
       <div class="progress"></div>
       <header class="topbar">
@@ -236,6 +245,59 @@
 
     $('.back').addEventListener('click', () => { location.hash = ''; });
     fabTop.addEventListener('click', () => scroller.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // Swipe right from the left edge to go home (native-style back gesture).
+    // The whole reader view follows the finger; releasing past a third of
+    // the screen (or a quick flick) navigates back, otherwise it springs
+    // back. A direction lock keeps vertical scrolling unaffected.
+    {
+      const EDGE = 48;
+      let sx = 0, sy = 0, t0 = 0, tracking = false, lockedH = false;
+      const reset = (animate) => {
+        if (animate) {
+          app.style.transition = 'transform .22s ease';
+          app.style.transform = 'translateX(0)';
+          setTimeout(() => { app.style.transition = ''; }, 240);
+        } else {
+          app.style.transition = '';
+          app.style.transform = '';
+        }
+        tracking = lockedH = false;
+      };
+      scroller.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        const t = e.touches[0];
+        if (t.clientX > EDGE) return;
+        sx = t.clientX; sy = t.clientY; t0 = performance.now();
+        tracking = true; lockedH = false;
+      }, { passive: true });
+      scroller.addEventListener('touchmove', (e) => {
+        if (!tracking) return;
+        const t = e.touches[0];
+        const dx = t.clientX - sx, dy = t.clientY - sy;
+        if (!lockedH) {
+          if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
+          if (dx > Math.abs(dy) * 1.4) lockedH = true;
+          else { tracking = false; return; }
+        }
+        app.style.transition = 'none';
+        app.style.transform = `translateX(${Math.max(0, dx)}px)`;
+      }, { passive: true });
+      scroller.addEventListener('touchend', (e) => {
+        if (!tracking) return;
+        const dx = e.changedTouches[0].clientX - sx;
+        const vx = dx / Math.max(1, performance.now() - t0);
+        if (lockedH && (dx > innerWidth * 0.32 || (dx > 60 && vx > 0.45))) {
+          app.style.transition = 'transform .2s ease-out';
+          app.style.transform = 'translateX(100%)';
+          setTimeout(() => { location.hash = ''; }, 200);
+          tracking = lockedH = false;
+        } else {
+          reset(lockedH);
+        }
+      }, { passive: true });
+      scroller.addEventListener('touchcancel', () => reset(true), { passive: true });
+    }
 
     function openSheet() {
       sheet.hidden = scrim.hidden = false;

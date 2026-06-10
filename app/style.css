@@ -62,6 +62,10 @@ body::before {
 
 #app { position: relative; z-index: 1; }
 
+/* Reader view: #app spans the viewport so its fixed children keep their
+   geometry while the whole view slides during the back-swipe gesture. */
+#app.view-reader { position: fixed; inset: 0; }
+
 button {
   font: inherit;
   color: inherit;
