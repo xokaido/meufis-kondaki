@@ -1,6 +1,8 @@
 # მეუფის კონდაკი — მობილური წიგნი
 
-მობილურზე მორგებული ვებ-აპლიკაცია მღვდელმთავრის მსახურებების (მწუხრი, ცისკარი, ლიტურგია) თვალყურის დევნებისთვის.
+მობილურზე მორგებული ვებ-აპლიკაცია (PWA) მღვდელმთავრის მსახურებების თვალყურის დევნებისთვის.
+
+**ცოცხალი ვერსია: https://xokaido.github.io/meufis-kondaki/**
 
 ## გაშვება
 
@@ -38,5 +40,16 @@ python3 -m http.server 8742
 
 ## iOS-ზე დაყენება
 
-გახსენით აპლიკაციის მისამართი Safari-ში → გაზიარების ღილაკი →
-**Add to Home Screen**. აპლიკაცია სრულად მუშაობს ინტერნეტის გარეშე.
+გახსენით https://xokaido.github.io/meufis-kondaki/ Safari-ში →
+გაზიარების ღილაკი → **Add to Home Screen**. აპლიკაცია სრულად მუშაობს
+ინტერნეტის გარეშე.
+
+## განახლების გამოქვეყნება
+
+```sh
+node build.js
+git add -A && git commit -m "..."
+git push origin main
+git branch -D gh-pages 2>/dev/null; git subtree split --prefix app -b gh-pages
+git push -f origin gh-pages
+```
