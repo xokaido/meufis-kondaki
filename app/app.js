@@ -76,7 +76,10 @@
   // ── routing ──
   let routeToken = 0;
   async function route() {
-    // reader scroll listeners live on .scrollwrap and die with it
+    // reader scroll listeners live on .scrollwrap and die with it,
+    // but a debounced position save may still be pending — kill it so a
+    // late scroll event on the torn-down view can't corrupt the position
+    clearTimeout(scrollTimer);
     document.body.classList.remove('sheet-open');
     const token = ++routeToken;
     const id = location.hash.replace(/^#\/?/, '');
@@ -249,8 +252,14 @@
     // asynchronously), but they never touch an inner element's scrollTop.
     const scroller = $('.scrollwrap');
 
+    // any deliberate jump (TOC, ↑, auto-scroll) cancels the restore corrector
+    let restoreCancelled = false;
+
     $('.back').addEventListener('click', () => { location.hash = ''; });
-    fabTop.addEventListener('click', () => scroller.scrollTo({ top: 0, behavior: 'smooth' }));
+    fabTop.addEventListener('click', () => {
+      restoreCancelled = true;
+      scroller.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
     // theme toggle in the top bar
     $('.theme-tb').addEventListener('click', (e) => {
@@ -282,6 +291,7 @@
     }
     function startAuto() {
       if (auto) return;
+      restoreCancelled = true;
       auto = { last: performance.now(), pos: scroller.scrollTop };
       acquireWake(); // reading hands-free: keep the screen on while scrolling
       const tick = (now) => {
@@ -377,6 +387,7 @@
       if (go) {
         const el = jumpTarget(+go.dataset.go);
         if (el) {
+          restoreCancelled = true;
           closeSheet();
           const y = el.getBoundingClientRect().top + scroller.scrollTop - 86;
           scroller.scrollTo({ top: y, behavior: 'auto' });
@@ -447,13 +458,19 @@
     }
 
     function onScroll() {
+      // iOS momentum can fire scroll events after the view is torn down;
+      // a detached scroller has all-zero rects, which would resolve to the
+      // LAST block and wreck the saved position — bail out instead.
+      if (!scroller.isConnected || scroller.clientHeight === 0) return;
       const max = scroller.scrollHeight - scroller.clientHeight;
       bar.style.width = (max > 0 ? (scroller.scrollTop / max) * 100 : 0) + '%';
       const i = topBlockIndex();
       tSec.textContent = sectionFor(i).text;
       fabTop.hidden = scroller.scrollTop < scroller.clientHeight * 1.5;
       clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => store.set('pos:' + svc.id, i), 400);
+      scrollTimer = setTimeout(() => {
+        if (scroller.isConnected) store.set('pos:' + svc.id, i);
+      }, 400);
     }
     scroller.addEventListener('scroll', onScroll, { passive: true });
 
@@ -470,8 +487,19 @@
       const stop = () => { userTookOver = true; };
       ['wheel', 'touchstart', 'keydown'].forEach((ev) =>
         scroller.addEventListener(ev, stop, { once: true, passive: true }));
+      // brief corrector: re-assert the anchor if late layout (fonts) or a
+      // WebKit clamp moved it; recomputed from the element, so it converges
+      const t0 = performance.now();
+      (function watch() {
+        if (userTookOver || restoreCancelled || !scroller.isConnected || performance.now() - t0 > 1200) return;
+        const y = targetY();
+        if (Math.abs(scroller.scrollTop - y) > 48) scroller.scrollTop = y;
+        requestAnimationFrame(watch);
+      })();
       if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(() => { if (!userTookOver) scroller.scrollTop = targetY(); });
+        document.fonts.ready.then(() => {
+          if (!userTookOver && !restoreCancelled && scroller.isConnected) scroller.scrollTop = targetY();
+        });
       }
     }
     onScroll();
