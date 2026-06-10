@@ -77,35 +77,51 @@ button {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  padding: max(env(safe-area-inset-top), 24px) 20px 40px;
+  padding: max(env(safe-area-inset-top), 16px) 20px calc(max(env(safe-area-inset-bottom), 16px) + 24px);
   max-width: 480px;
   margin: 0 auto;
+  position: relative;
+}
+
+.theme-btn {
+  position: absolute;
+  top: max(env(safe-area-inset-top), 14px);
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  color: var(--gold);
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  transition: transform .15s ease;
+}
+.theme-btn:active { transform: scale(.9); }
+
+.hero {
+  text-align: center;
+  margin: 7vh 0 5vh;
+  animation: rise .5s backwards;
 }
 
 .home-cross {
-  text-align: center;
   color: var(--gold);
-  font-size: 2rem;
-  margin-top: 8vh;
-  letter-spacing: .5em;
+  font-size: 1.8rem;
   text-shadow: 0 0 24px rgba(212,168,67,.45);
 }
 
 .home h1 {
-  text-align: center;
   font-weight: 600;
-  font-size: 2rem;
+  font-size: 1.8rem;
   letter-spacing: .04em;
-  margin-top: 18px;
+  margin-top: 12px;
   color: var(--ink);
 }
 
 .home .tagline {
-  text-align: center;
   color: var(--muted);
-  font-size: .95rem;
+  font-size: .92rem;
   margin-top: 6px;
-  margin-bottom: 7vh;
 }
 
 .svc-card {
@@ -116,8 +132,8 @@ button {
   border: 1px solid var(--line);
   border-left: 3px solid var(--gold-dim);
   border-radius: 14px;
-  padding: 20px 22px;
-  margin-bottom: 16px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
   box-shadow: var(--shadow);
   transition: transform .15s ease, border-color .2s;
   animation: rise .5s backwards;
@@ -125,31 +141,85 @@ button {
 .svc-card:nth-child(odd) { animation-delay: .08s; }
 .svc-card:active { transform: scale(.985); border-left-color: var(--gold); }
 
+button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.svc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.svc-main { flex: 1; min-width: 0; }
+.svc-go {
+  color: var(--gold-dim);
+  font-size: 1.6rem;
+  line-height: 1;
+  flex: none;
+  transition: color .2s, transform .2s;
+}
+.svc-card:active .svc-go { color: var(--gold); transform: translateX(3px); }
+
 .svc-card .svc-name {
   display: block;
-  font-size: 1.45rem;
+  font-size: 1.35rem;
   font-weight: 600;
   color: var(--ink);
 }
 .svc-card .svc-sub {
   display: block;
   color: var(--muted);
-  font-size: .9rem;
+  font-size: .88rem;
   margin-top: 2px;
 }
-.svc-card .svc-resume {
-  display: inline-block;
-  margin-top: 10px;
-  font-size: .8rem;
+
+.svc-progress {
+  display: block;
+  height: 3px;
+  margin-top: 14px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.svc-progress i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--gold);
+}
+.svc-meta {
+  display: block;
+  margin-top: 7px;
+  font-size: .76rem;
   color: var(--gold);
-  border: 1px solid var(--gold-dim);
-  border-radius: 99px;
-  padding: 2px 12px;
+  letter-spacing: .04em;
 }
 
 @keyframes rise {
   from { opacity: 0; transform: translateY(14px); }
 }
+
+.home-sect {
+  margin: 28px 4px 14px;
+  font-size: .85rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.home-sect::after {
+  content: "";
+  display: inline-block;
+  width: 40px;
+  margin-left: 12px;
+  vertical-align: middle;
+  border-top: 1px solid var(--gold-dim);
+}
+
+.svc-card.sm { padding: 14px 18px; margin-bottom: 12px; }
+.svc-card.sm .svc-name { font-size: 1.12rem; }
+.svc-card.sm .svc-sub { font-size: .82rem; }
 
 .home .foot {
   margin-top: auto;
@@ -208,6 +278,18 @@ button {
   box-shadow: 0 0 8px rgba(212,168,67,.7);
 }
 
+/* The reader scrolls inside this fixed container (not the window), so the
+   browser's hash-navigation scroll handling can never move our position. */
+.scrollwrap {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  outline: none;
+  z-index: 1;
+}
+
 .reader {
   max-width: 620px;
   margin: 0 auto;
@@ -216,7 +298,18 @@ button {
 }
 
 /* dialogue */
-.say { margin: 1.5em 0; }
+.say {
+  --rc: var(--muted);
+  margin: 1.5em 0;
+  padding-left: 12px;
+  border-left: 2px solid color-mix(in srgb, var(--rc) 45%, transparent);
+}
+.say .who svg {
+  width: 1.35em;
+  height: 1.35em;
+  margin-right: 7px;
+  vertical-align: -0.4em;
+}
 .say .who {
   display: block;
   font-size: .72em;
@@ -236,13 +329,12 @@ button {
 }
 .say p { color: var(--ink); }
 
-.role-bishop .who { color: var(--c-bishop); }
-.role-priest .who { color: var(--c-priest); }
-.role-deacon .who { color: var(--c-deacon); }
-.role-choir  .who { color: var(--c-choir); }
-.role-verse  .who { color: var(--c-verse); }
-
-.role-bishop .who::before { content: "☩ "; letter-spacing: 0; }
+.role-bishop { --rc: var(--c-bishop); }
+.role-priest { --rc: var(--c-priest); }
+.role-deacon { --rc: var(--c-deacon); }
+.role-choir  { --rc: var(--c-choir); }
+.role-reader { --rc: var(--c-verse); }
+.say .who { color: var(--rc); }
 
 /* rubrics — instructions */
 .rubric {
@@ -254,6 +346,9 @@ button {
   font-size: .88em;
 }
 body.hide-rubrics .rubric { display: none; }
+
+/* plain body text (psalms, prayers of the faithful) */
+.text { margin: 1.1em 0; color: var(--ink); }
 
 /* prayers */
 .prayer {
@@ -286,6 +381,32 @@ body.hide-rubrics .rubric { display: none; }
   margin: 0 .9em;
   opacity: .6;
 }
+
+/* collapsible prayer groups */
+details.pgroup { margin: 2.2em 0; }
+details.pgroup summary {
+  list-style: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+details.pgroup summary::-webkit-details-marker { display: none; }
+details.pgroup .head {
+  position: relative;
+  margin: 0;
+  padding: .4em 0;
+}
+details.pgroup .tog {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--muted);
+  font-size: .85em;
+  transition: rotate .2s;
+}
+details.pgroup[open] .tog { rotate: 180deg; }
+details.pgroup:not([open]) .head { opacity: .75; }
+details.pgroup .prayer { margin-top: 1em; }
 
 .sep {
   text-align: center;
