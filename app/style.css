@@ -268,8 +268,53 @@ button:focus-visible {
 
 .topbar .menu-btn {
   font-size: 1.3rem;
-  padding: 8px 12px;
+  padding: 8px 10px;
   color: var(--gold);
+}
+
+.topbar .auto-btn,
+.topbar .theme-tb {
+  font-size: 1.05rem;
+  padding: 8px 7px;
+  color: var(--gold);
+  line-height: 1;
+}
+.topbar .auto-btn.on {
+  color: var(--bg);
+  background: var(--gold);
+  border-radius: 50%;
+  padding: 8px;
+}
+
+/* auto-scroll speed control */
+.speed-pill {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(env(safe-area-inset-bottom), 16px);
+  z-index: 26;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: color-mix(in srgb, var(--bg-raise) 88%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  box-shadow: var(--shadow);
+  animation: rise .25s backwards;
+}
+.speed-pill button {
+  width: 44px;
+  height: 44px;
+  font-size: 1.3rem;
+  color: var(--gold);
+}
+.speed-pill .spd-label {
+  min-width: 38px;
+  text-align: center;
+  font-size: .9rem;
+  color: var(--ink-soft);
 }
 
 .progress {

@@ -211,8 +211,15 @@
           <div class="t-name">${esc(svc.name)}</div>
           <div class="t-sec"></div>
         </div>
+        <button class="auto-btn" aria-label="ავტო-გადახვევა">▶&#xFE0E;</button>
+        <button class="theme-tb" aria-label="თემა">${theme === 'light' ? '☾' : '☀'}</button>
         <button class="menu-btn" aria-label="სარჩევი">☰</button>
       </header>
+      <div class="speed-pill" hidden>
+        <button data-spd="-1" aria-label="ნელა">−</button>
+        <span class="spd-label"></span>
+        <button data-spd="1" aria-label="სწრაფად">+</button>
+      </div>
       <div class="scrollwrap" tabindex="-1">
         <main class="reader">
           ${renderBlocks(svc.blocks)}
@@ -225,7 +232,6 @@
         <div class="grip"></div>
         <div class="controls">
           <div class="ctl"><button data-act="f-">A−</button><button data-act="f+">A+</button></div>
-          <div class="ctl"><button data-act="theme">${theme === 'light' ? '☾ ბნელი' : '☀ ნათელი'}</button></div>
           <div class="ctl"><button data-act="rubrics" class="${showRubrics ? 'on' : ''}">განგება</button></div>
           <div class="ctl"><button data-act="wake" class="${wakeWanted ? 'on' : ''}">⏾ ეკრანი</button></div>
         </div>
@@ -246,12 +252,68 @@
     $('.back').addEventListener('click', () => { location.hash = ''; });
     fabTop.addEventListener('click', () => scroller.scrollTo({ top: 0, behavior: 'smooth' }));
 
-    // Swipe right from the left edge to go home (native-style back gesture).
+    // theme toggle in the top bar
+    $('.theme-tb').addEventListener('click', (e) => {
+      theme = theme === 'light' ? 'dark' : 'light';
+      store.set('theme', theme);
+      applySettings();
+      e.currentTarget.textContent = theme === 'light' ? '☾' : '☀';
+    });
+
+    // ── auto-scroll: ▶ in the top bar starts a slow, even scroll ──
+    const SPEEDS = [18, 32, 50, 75, 110]; // px per second
+    const SPEED_LABELS = ['½×', '1×', '1½×', '2×', '3×'];
+    let speedIdx = Math.min(SPEEDS.length - 1, Math.max(0, store.get('speed', 1)));
+    const autoBtn = $('.auto-btn'), pill = $('.speed-pill'), spdLabel = $('.spd-label');
+    let auto = null;
+
+    function autoUI() {
+      autoBtn.textContent = auto ? '⏸︎' : '▶︎';
+      autoBtn.classList.toggle('on', !!auto);
+      pill.hidden = !auto;
+      spdLabel.textContent = SPEED_LABELS[speedIdx];
+    }
+    function stopAuto() {
+      if (!auto) return;
+      cancelAnimationFrame(auto.raf);
+      auto = null;
+      if (!wakeWanted) releaseWake();
+      autoUI();
+    }
+    function startAuto() {
+      if (auto) return;
+      auto = { last: performance.now(), pos: scroller.scrollTop };
+      acquireWake(); // reading hands-free: keep the screen on while scrolling
+      const tick = (now) => {
+        if (!auto || !scroller.isConnected) { stopAuto(); return; }
+        auto.pos = Math.min(auto.pos + SPEEDS[speedIdx] * (now - auto.last) / 1000,
+          scroller.scrollHeight - scroller.clientHeight);
+        auto.last = now;
+        scroller.scrollTop = auto.pos;
+        if (auto.pos >= scroller.scrollHeight - scroller.clientHeight) { stopAuto(); return; }
+        auto.raf = requestAnimationFrame(tick);
+      };
+      auto.raf = requestAnimationFrame(tick);
+      autoUI();
+    }
+    autoBtn.addEventListener('click', () => (auto ? stopAuto() : startAuto()));
+    pill.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-spd]');
+      if (!b) return;
+      speedIdx = Math.min(SPEEDS.length - 1, Math.max(0, speedIdx + +b.dataset.spd));
+      store.set('speed', speedIdx);
+      autoUI();
+    });
+    // any manual scroll input pauses auto-scroll
+    ['touchstart', 'wheel'].forEach((ev) =>
+      scroller.addEventListener(ev, stopAuto, { passive: true }));
+    autoUI();
+
+    // Swipe right anywhere to go home (Telegram-style back gesture).
     // The whole reader view follows the finger; releasing past a third of
     // the screen (or a quick flick) navigates back, otherwise it springs
     // back. A direction lock keeps vertical scrolling unaffected.
     {
-      const EDGE = 48;
       let sx = 0, sy = 0, t0 = 0, tracking = false, lockedH = false;
       const reset = (animate) => {
         if (animate) {
@@ -267,7 +329,6 @@
       scroller.addEventListener('touchstart', (e) => {
         if (e.touches.length !== 1) return;
         const t = e.touches[0];
-        if (t.clientX > EDGE) return;
         sx = t.clientX; sy = t.clientY; t0 = performance.now();
         tracking = true; lockedH = false;
       }, { passive: true });
@@ -327,11 +388,6 @@
       switch (act.dataset.act) {
         case 'f-': fontScale = Math.max(0.8, +(fontScale - 0.1).toFixed(2)); store.set('font', fontScale); break;
         case 'f+': fontScale = Math.min(1.7, +(fontScale + 0.1).toFixed(2)); store.set('font', fontScale); break;
-        case 'theme':
-          theme = theme === 'light' ? 'dark' : 'light';
-          store.set('theme', theme);
-          act.textContent = theme === 'light' ? '☾ ბნელი' : '☀ ნათელი';
-          break;
         case 'rubrics':
           showRubrics = !showRubrics;
           store.set('rubrics', showRubrics);
