@@ -4,18 +4,26 @@
 
 **ცოცხალი ვერსია: https://gulani.ge** (სარეზერვო: https://xokaido.github.io/meufis-kondaki/)
 
-ჰოსტინგი: Cloudflare Workers (სტატიკური ფაილები `app/`-დან, კონფიგი —
-`wrangler.jsonc`; ყოველი push-ისას Cloudflare თავად უშვებს `node build.js`-ს).
+ჰოსტინგი: Cloudflare Workers (სტატიკური ფაილები `dist/`-დან, კონფიგი —
+`wrangler.jsonc`; ყოველი push-ისას GitHub Actions თავად აშენებს `npm run build`-ს).
 
 ## გაშვება
 
+**დეველოპმენტი:**
+
 ```sh
-cd app
-python3 -m http.server 8742
+npm install && npm run dev
 ```
 
-გახსენით ტელეფონის/კომპიუტერის ბრაუზერში: `http://localhost:8742`
-(ან ატვირთეთ `app/` საქაღალდე ნებისმიერ სტატიკურ ჰოსტინგზე — GitHub Pages, Netlify და ა.შ.)
+გახსენით: `http://localhost:5173`
+
+**სამუშაო build:**
+
+```sh
+npm run build
+```
+
+გამოაქვს `dist/` საქაღალდე — ატვირთეთ ნებისმიერ სტატიკურ ჰოსტინგზე (Cloudflare, GitHub Pages, Netlify და ა.შ.).
 
 ## შესაძლებლობები
 
@@ -31,15 +39,17 @@ python3 -m http.server 8742
 ## სტრუქტურა
 
 - `*.md` — მსახურებების საწყისი ტექსტები
-- `build.js` — გადამყვანი: markdown → `app/data/*.json` + `app/sw.js` (`node build.js`)
+- `build.cjs` — გადამყვანი: markdown → `public/data/*.json` + `public/data/search-index.json` (`node build.cjs`)
   - „პარაკლისი და ლოცვანი" ფაილი იყოფა შვიდ ნაწილად: კმევები, მცირე პარაკლისი, ლიტანიობა, ჯვართამაღლების ცისკარზე, ლოცვები ზიარების წინ, განსატევებელნი, მცირე კურთხევანი
 - `convert_latin.py` — ერთჯერადი გადამყვანი AcadNusx-ის ლათინური კოდირებიდან ქართულზე (ორიგინალი შენახულია `*.latin-original.bak`-ში)
-- `sw.template.js` — service worker-ის შაბლონი (ვერსიას და ფაილების სიას build.js ჩასვამს)
-- `app/` — სტატიკური PWA (index.html, style.css, app.js, data/, fonts/, icons/, manifest, sw.js)
+- `src/` — Svelte 5 აპლიკაცია (views/, components/, lib/, styles/)
+- `public/` — სტატიკური ფაილები (fonts/, icons/; `public/data/` — build.cjs-ის გამოყვანა)
+- `tests/` — ერთეული ტესტები (vitest) + სმოუქ ტესტები (Playwright, `tests/e2e/`)
+- `dist/` — build-ის შედეგი (vite build, არ ინახება git-ში)
 
-ტექსტის შესწორების შემდეგ ხელახლა გაუშვით `node build.js` — ის თავად
-განაახლებს ქეშის ვერსიას, ასე რომ დაყენებული აპლიკაცია შემდეგ გახსნაზე
-ახალ ტექსტს ჩამოტვირთავს.
+ტექსტის შესწორების შემდეგ ხელახლა გაუშვით `npm run build` — ის თავად
+განაახლებს მონაცემთა ფაილებს და ქეშის მანიფესტს, ასე რომ დაყენებული
+აპლიკაცია შემდეგ გახსნაზე ახალ ტექსტს ჩამოტვირთავს.
 
 ## iOS-ზე დაყენება
 
@@ -63,8 +73,8 @@ python3 -m http.server 8742
 
 ## განახლების გამოქვეყნება (ავტომატური)
 
-ყოველი push `main`-ზე თავად აშენებს და აქვეყნებს საიტს
-(GitHub Actions → `.github/workflows/deploy.yml`). ლოკალურად საკმარისია:
+ყოველი push `main`-ზე GitHub Actions-ი თავად უშვებს `npm run build`-ს და
+`dist/`-ს საქვეყნებს (`.github/workflows/deploy.yml`). ლოკალურად საკმარისია:
 
 ```sh
 git add -A && git commit -m "..." && git push origin main
