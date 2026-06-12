@@ -1,28 +1,14 @@
 #!/usr/bin/env node
-// Parses the service markdown files into public/data/*.json for the app.
+// Parses texts/*.md (markdown with frontmatter) into public/data/*.json.
 // Run: node build.cjs
+//
+// To add a text: drop texts/<order>-<id>.md with a frontmatter header — see
+// texts/README.md for the format. No changes here are needed.
 
 const fs = require('fs');
 const path = require('path');
 
-// group 1: full services (one file each)
-const SOURCES = [
-  { file: 'მეუფის კონდაკი მწუხრი.md', id: 'vespers', name: 'მწუხრი', subtitle: 'წესი და განგება მწუხრისა', category: 'services' },
-  { file: 'მეუფის კონდაკი ცისკარი.md', id: 'matins', name: 'ცისკარი', subtitle: 'წესი და განგება ცისკრისა', category: 'services' },
-  { file: 'მეუფის_კონდაკი_ნუსხურად_ლიტურგია_ოქროპირისა_ქართულად.md', id: 'liturgy', name: 'ლიტურგია', subtitle: 'წმიდისა იოანე ოქროპირისა', category: 'services' },
-];
-
-// group 2: sections of the პარაკლისი და ლოცვანი file, split at exact title lines
-const SECTIONED_FILE = 'მეუფის კონდაკი ნუსხურად პარაკლისი და ლოცვანი.md';
-const SECTIONS = [
-  { title: 'კმევები', id: 'kmevebi', name: 'კმევები', subtitle: 'კმევის წესი მსახურებებზე', category: 'rites' },
-  { title: 'მცირე პარაკლისი', id: 'paraklisi', name: 'მცირე პარაკლისი', subtitle: 'წესი მცირე პარაკლისისა', mode: 'hybrid', category: 'rites' },
-  { title: 'ლიტანიობა', id: 'litanioba', name: 'ლიტანიობა', subtitle: 'წესი ლიტანიობისა', mode: 'hybrid', category: 'rites' },
-  { title: 'ჯვართამაღლების ცისკარზე', id: 'jvari', name: 'ჯვართამაღლების ცისკარზე', subtitle: 'ჯვრის გამოსვენების განგება', mode: 'hybrid', category: 'rites' },
-  { title: 'ლოცვები ზიარების წინ', id: 'ziareba', name: 'ლოცვები ზიარების წინ', subtitle: 'და სამადლობელი ზიარების შემდგომად', mode: 'text', category: 'prayers' },
-  { title: 'განსატევებელნი', id: 'gansatevebelni', name: 'განსატევებელნი', subtitle: 'სადღესასწაულო ჩამოლოცვები', mode: 'text', category: 'prayers' },
-  { title: 'მცირე კურთხევანი', id: 'kurtxevani', name: 'მცირე კურთხევანი', subtitle: 'ლოცვები სხვადასხვა შემთხვევისათვის', mode: 'text', endTitle: 'ზანდუკი', category: 'rites' },
-];
+const TEXTS_DIR = path.join(__dirname, 'texts');
 
 const CATEGORIES = [
   { id: 'services', name: 'მსახურებანი' },
@@ -44,41 +30,49 @@ const ROLE_RULES = [
   [/^მუხლი/u, 'reader'],
 ];
 
-// Ordered landmarks per service for the table of contents: first block whose
-// text contains `match` (searching forward) becomes an anchor labeled `label`.
-const LANDMARKS = {
-  vespers: [
-    ['მოვედით თაყვანისვცეთ', '103-ე ფსალმუნი'],
-    ['მშვიდობით უფლისა მიმართ ვილოცოთ', 'დიდი კვერექსი'],
-    ['უფალო ღაღადვყავი', 'უფალო ღაღადვყავი'],
-    ['კურთხევა უფლისა თქვენ ზედა', 'კურთხევა და დასასრული'],
-  ],
-  matins: [
-    ['ექვსფსალმუნ', 'ექვსფსალმუნი'],
-    ['ღმერთი უფალი და გამოგვიჩნდა', 'ღმერთი უფალი'],
-    ['აქებდით სახელსა', 'პოლიელეი'],
-    ['ყოველი სული აქებდით უფალსა', 'სახარების წინ'],
-    ['სიბრძნით აღემართენით და ისმინეთ', 'სახარება'],
-    ['აქებდითის დიდების მუხლზე', 'აქებდითსა'],
-    ['დიდება მაღალიანი', 'დიდება მაღალიანი'],
-  ],
-  liturgy: [
-    ['პირველი ანტიფონის საიდუმლო ლოცვა', 'ანტიფონები'],
-    ['აკურთხებს შესავალს', 'მცირე შესვლა'],
-    ['ჟამი სამწმიდაოსი', 'სამწმიდაო'],
-    ['წარდგომა, ფსალმუნი', 'სამოციქულო'],
-    ['ლოცვა სახარების კითხვის წინ', 'სახარება'],
-    ['რომელნი ქერუბიმთა', 'ქერუბიკონი'],
-    ['მრწამს', 'მრწამსი'],
-    ['ღირს არს და მართალ', 'ევქარისტიული კანონი'],
-    ['მამაო ჩუჱნო', 'მამაო ჩუენო'],
-    ['იწყება მრევლის ზიარება', 'მრევლის ზიარება'],
-    ['ისპოლა ეტი დესპოტა', 'დასასრული'],
-  ],
-  ziareba: [
-    ['ესრეთ ლოცვა სამადლობელი', 'ლოცვა სამადლობელი'],
-  ],
-};
+// Frontmatter: '---' fenced key: value lines at the top of each text file.
+// Repeated `landmark:` lines accumulate as [match, label] pairs (split on '|').
+// Returns { meta, body } where body is the markdown after the closing fence.
+function parseFrontmatter(raw, file = '?') {
+  const lines = raw.split(/\r?\n/);
+  if (lines[0].trim() !== '---') throw new Error(`${file}: missing frontmatter`);
+  const meta = { landmarks: [] };
+  let i = 1;
+  for (; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim() === '---') break;
+    if (line.trim() === '') continue;
+    const m = line.match(/^(\w+):\s*(.*)$/);
+    if (!m) throw new Error(`${file}: bad frontmatter line: ${line}`);
+    const [, key, value] = m;
+    if (key === 'landmark') {
+      const [match, label] = value.split('|').map((s) => s.trim());
+      if (!match || !label) throw new Error(`${file}: landmark needs "match | label"`);
+      meta.landmarks.push([match, label]);
+    } else if (key === 'skipTitle') {
+      meta.skipTitle = value === 'true';
+    } else {
+      meta[key] = value;
+    }
+  }
+  if (i === lines.length) throw new Error(`${file}: unterminated frontmatter`);
+  for (const req of ['id', 'name', 'subtitle', 'category']) {
+    if (!meta[req]) throw new Error(`${file}: frontmatter missing "${req}"`);
+  }
+  return { meta, bodyLines: lines.slice(i + 1) };
+}
+
+// All texts, in filename order (the numeric prefix defines library order).
+function loadTexts() {
+  return fs.readdirSync(TEXTS_DIR)
+    .filter((f) => f.endsWith('.md') && f !== 'README.md')
+    .sort()
+    .map((f) => {
+      const { meta, bodyLines } = parseFrontmatter(
+        fs.readFileSync(path.join(TEXTS_DIR, f), 'utf-8'), f);
+      return { ...meta, file: f, bodyLines };
+    });
+}
 
 function roleFor(label) {
   for (const [re, role] of ROLE_RULES) if (re.test(label)) return role;
@@ -117,7 +111,7 @@ function stripBold(s) {
 // skipTitle: drop the first paragraph (a standalone title line).
 // mode 'text': plain paragraphs are body text, not rubrics, and short
 // unpunctuated plain lines are treated as headings (prayer/feast titles).
-function parseLines(lines, id, skipTitle, mode) {
+function parseLines(lines, id, skipTitle, mode, landmarks = []) {
   // Group into paragraphs: consecutive non-blank lines belong together,
   // except a short fully-bold line (section heading) always stands alone.
   const isHeadingLine = (l) => /^\*\*[^*]{1,60}\*\*\s*$/.test(l.trim());
@@ -222,7 +216,7 @@ function parseLines(lines, id, skipTitle, mode) {
   const toc = blocks[0] && blocks[0].t === 'head' ? [] : [{ text: 'დასაწყისი', i: 0 }];
   blocks.forEach((b, i) => { if (b.t === 'head') toc.push({ text: b.text, i }); });
   let from = 0;
-  for (const [match, label] of LANDMARKS[id] || []) {
+  for (const [match, label] of landmarks) {
     const i = blocks.findIndex((b, idx) => idx >= from && ((b.text || '').includes(match) || (b.who || '').includes(match)));
     if (i === -1) { console.warn(`  !! landmark not found (${id}): ${match}`); continue; }
     toc.push({ text: label, i });
@@ -234,10 +228,6 @@ function parseLines(lines, id, skipTitle, mode) {
   const tocClean = toc.filter((t) => !seen.has(t.i) && seen.add(t.i));
 
   return { blocks, toc: tocClean };
-}
-
-function readLines(file) {
-  return fs.readFileSync(path.join(__dirname, file), 'utf-8').split(/\r?\n/);
 }
 
 // Search index: per text, [blockIndex, owningSectionTitle, plainText]
@@ -259,34 +249,20 @@ function searchEntries(svc) {
 }
 
 function main() {
-  const services = [];
-
-  for (const src of SOURCES) {
-    const { blocks, toc } = parseLines(readLines(src.file), src.id, true);
-    services.push({ ...src, blocks, toc });
-  }
-
-  {
-    const lines = readLines(SECTIONED_FILE);
-    const starts = SECTIONS.map((s) => {
-      const i = lines.findIndex((l) => l.trim() === s.title);
-      if (i === -1) throw new Error(`section title not found: ${s.title}`);
-      return i;
-    });
-    for (let k = 1; k < starts.length; k++) {
-      if (starts[k] <= starts[k - 1]) throw new Error('section titles out of order');
+  const texts = loadTexts();
+  const ids = new Set();
+  for (const t of texts) {
+    if (ids.has(t.id)) throw new Error(`duplicate text id: ${t.id}`);
+    ids.add(t.id);
+    if (!CATEGORIES.some((c) => c.id === t.category && !c.soon)) {
+      throw new Error(`${t.file}: unknown or not-yet-open category "${t.category}"`);
     }
-    SECTIONS.forEach((s, k) => {
-      let end = k + 1 < starts.length ? starts[k + 1] : lines.length;
-      if (s.endTitle) {
-        const e = lines.findIndex((l, i) => i > starts[k] && l.trim() === s.endTitle);
-        if (e !== -1 && e < end) end = e;
-      }
-      const chunk = lines.slice(starts[k] + 1, end);
-      const { blocks, toc } = parseLines(chunk, s.id, false, s.mode);
-      services.push({ ...s, blocks, toc });
-    });
   }
+
+  const services = texts.map((t) => {
+    const { blocks, toc } = parseLines(t.bodyLines, t.id, !!t.skipTitle, t.mode, t.landmarks);
+    return { ...t, blocks, toc };
+  });
 
   const dataDir = path.join(__dirname, 'public', 'data');
   fs.mkdirSync(dataDir, { recursive: true });
@@ -311,5 +287,5 @@ function main() {
   }
 }
 
-module.exports = { parseLines, roleFor, searchEntries, CATEGORIES, SOURCES, SECTIONS };
+module.exports = { parseLines, roleFor, searchEntries, parseFrontmatter, loadTexts, CATEGORIES };
 if (require.main === module) main();

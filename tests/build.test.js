@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const { parseLines, roleFor, searchEntries, CATEGORIES, SOURCES, SECTIONS } = require('../build.cjs');
+const { parseLines, roleFor, searchEntries, parseFrontmatter, loadTexts, CATEGORIES } = require('../build.cjs');
 
 describe('roleFor', () => {
   it('maps speaker labels to roles', () => {
@@ -30,15 +30,47 @@ describe('parseLines', () => {
 });
 
 describe('categories', () => {
-  it('every source text has a category', () => {
+  it('every text in texts/ has a browsable category', () => {
     const browsable = CATEGORIES.filter((c) => !c.soon).map((c) => c.id);
-    for (const s of [...SOURCES, ...SECTIONS]) {
-      expect(browsable).toContain(s.category);
+    const texts = loadTexts();
+    expect(texts.length).toBeGreaterThanOrEqual(10);
+    for (const t of texts) {
+      expect(browsable).toContain(t.category);
     }
   });
   it('CATEGORIES lists browsable + coming-soon categories in order', () => {
     expect(CATEGORIES.map((c) => c.id)).toEqual(['services', 'rites', 'prayers', 'propers', 'scores']);
     expect(CATEGORIES.find((c) => c.id === 'propers').soon).toBe(true);
+  });
+});
+
+describe('parseFrontmatter', () => {
+  it('parses keys, landmarks, skipTitle and returns the body', () => {
+    const raw = [
+      '---',
+      'id: test',
+      'name: სატესტო',
+      'subtitle: ქვესათაური',
+      'category: rites',
+      'mode: hybrid',
+      'skipTitle: true',
+      'landmark: საძიებო ფრაზა | იარლიყი',
+      'landmark: მეორე | ანკერი',
+      '---',
+      'პირველი სტრიქონი',
+    ].join('\n');
+    const { meta, bodyLines } = parseFrontmatter(raw, 'test.md');
+    expect(meta).toEqual({
+      id: 'test', name: 'სატესტო', subtitle: 'ქვესათაური', category: 'rites',
+      mode: 'hybrid', skipTitle: true,
+      landmarks: [['საძიებო ფრაზა', 'იარლიყი'], ['მეორე', 'ანკერი']],
+    });
+    expect(bodyLines).toEqual(['პირველი სტრიქონი']);
+  });
+  it('rejects files without frontmatter or required keys', () => {
+    expect(() => parseFrontmatter('plain text', 'x.md')).toThrow(/missing frontmatter/);
+    expect(() => parseFrontmatter('---\nid: a\n---\n', 'x.md')).toThrow(/missing "name"/);
+    expect(() => parseFrontmatter('---\nid: a\n', 'x.md')).toThrow(/unterminated/);
   });
 });
 
