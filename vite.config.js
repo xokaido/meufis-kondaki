@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { textsHotReload } from './scripts/vite-plugin-texts.js';
 
 export default defineConfig({
-  // relative base: works at gulani.ge root AND xokaido.github.io/meufis-kondaki/
+  // relative base: works at kondaki.ge root AND xokaido.github.io/meufis-kondaki/
   base: './',
   plugins: [
     svelte(),
@@ -28,8 +28,8 @@ export default defineConfig({
         skipWaiting: false,
       },
       manifest: {
-        name: 'გულანი',
-        short_name: 'გულანი',
+        name: 'კონდაკი',
+        short_name: 'კონდაკი',
         description: 'წესი და განგება მღვდელმთავრის მსახურებისა',
         lang: 'ka',
         start_url: './',

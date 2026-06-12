@@ -1,5 +1,5 @@
 {
-  "name": "gulani-web",
+  "name": "kondaki-web",
   "compatibility_date": "2026-06-12",
   // Test-gated production build: static checks + unit tests must pass before
   // the Vite bundle is produced. Playwright e2e stays in GitHub Actions only

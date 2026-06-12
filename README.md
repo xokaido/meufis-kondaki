@@ -2,11 +2,11 @@
 
 მობილურზე მორგებული ვებ-აპლიკაცია (PWA) მღვდელმთავრის მსახურებების თვალყურის დევნებისთვის.
 
-**ცოცხალი ვერსია: https://gulani.ge** (სარეზერვო: https://xokaido.github.io/meufis-kondaki/)
+**ცოცხალი ვერსია: https://kondaki.ge** (სარეზერვო: https://xokaido.github.io/meufis-kondaki/)
 
 ჰოსტინგი (ორი დამოუკიდებელი არხი):
 
-- **მთავარი — Cloudflare Workers** (https://gulani.ge): Cloudflare-ის საკუთარი
+- **მთავარი — Cloudflare Workers** (https://kondaki.ge): Cloudflare-ის საკუთარი
   git-ინტეგრაცია ყოველ `main`-ზე push-ისას უშვებს `npm ci && npm run check &&
   npm test && npm run build`-ს (კონფიგი — `wrangler.jsonc`) — ტესტების ჩავარდნა
   წყვეტს გამოქვეყნებას. ეს ამ რეპოს workflow-ების გარეთ ხდება, Cloudflare-ის მხარეს.
@@ -87,7 +87,7 @@ npm run build
 ## განახლების გამოქვეყნება (ავტომატური)
 
 ყოველი push `main`-ზე ორივე არხი თავად განახლდება: Cloudflare აშენებს და
-აქვეყნებს https://gulani.ge -ს, ხოლო GitHub Actions ტესტების გავლის შემდეგ
+აქვეყნებს https://kondaki.ge -ს, ხოლო GitHub Actions ტესტების გავლის შემდეგ
 ანახლებს სარეზერვო GitHub Pages-ს (`.github/workflows/deploy.yml`).
 ლოკალურად საკმარისია:
 
