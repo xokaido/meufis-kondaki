@@ -489,6 +489,14 @@ body.hide-rubrics .rubric { display: none; }
 /* plain body text (psalms, prayers of the faithful) */
 .text { margin: 1.1em 0; color: var(--ink); }
 
+/* inline emphasis (*word* in the source) — Georgian has no italic face,
+   so emphasize with weight and a warm accent instead */
+.reader em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--gold);
+}
+
 /* prayers */
 .prayer {
   margin: 1.5em 0;

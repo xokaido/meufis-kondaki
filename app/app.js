@@ -41,6 +41,8 @@
   });
 
   const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // inline emphasis: *word* in the source markdown -> <em> (rendered semibold)
+  const fmt = (s) => esc(s).replace(/\*([^*\n]{1,120}?)\*/g, '<em>$1</em>');
 
   // ── install prompt ──
   // Android/Chrome: real one-tap install via beforeinstallprompt.
@@ -225,13 +227,13 @@
     switch (b.t) {
       case 'say':
         return `<div class="say role-${b.role}" data-i="${i}">
-          <span class="who">${ICONS[b.role] || ''}${esc(b.who)}</span><p>${esc(b.text)}</p></div>`;
+          <span class="who">${ICONS[b.role] || ''}${esc(b.who)}</span><p>${fmt(b.text)}</p></div>`;
       case 'rubric':
-        return `<div class="rubric" data-i="${i}">${esc(b.text)}</div>`;
+        return `<div class="rubric" data-i="${i}">${fmt(b.text)}</div>`;
       case 'text':
-        return `<div class="text" data-i="${i}">${esc(b.text)}</div>`;
+        return `<div class="text" data-i="${i}">${fmt(b.text)}</div>`;
       case 'prayer':
-        return `<div class="prayer" data-i="${i}">${esc(b.text)}</div>`;
+        return `<div class="prayer" data-i="${i}">${fmt(b.text)}</div>`;
       case 'head':
         return `<h2 class="head" data-i="${i}">${esc(b.text)}</h2>`;
       case 'sep':
