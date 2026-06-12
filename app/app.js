@@ -42,6 +42,63 @@
 
   const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+  // ── install prompt ──
+  // Android/Chrome: real one-tap install via beforeinstallprompt.
+  // iOS: no install API exists, so show a two-step visual guide instead.
+  let installEvent = null;
+  const isStandalone = () =>
+    matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = () =>
+    /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installEvent = e;
+    const btn = document.querySelector('.install-btn');
+    if (btn) btn.hidden = false;
+  });
+  window.addEventListener('appinstalled', () => {
+    installEvent = null;
+    const btn = document.querySelector('.install-btn');
+    if (btn) btn.hidden = true;
+  });
+
+  function showInstallUI() {
+    if (installEvent) {
+      installEvent.prompt();
+      installEvent.userChoice.then((r) => {
+        if (r.outcome === 'accepted') document.querySelector('.install-btn')?.setAttribute('hidden', '');
+      });
+      return;
+    }
+    // iOS (or any browser without the prompt): visual guide
+    const guide = document.createElement('div');
+    guide.className = 'install-guide';
+    guide.innerHTML = `
+      <div class="ig-scrim"></div>
+      <div class="ig-sheet" role="dialog" aria-label="დაყენების ინსტრუქცია">
+        <div class="grip"></div>
+        <h3>დააყენეთ ტელეფონზე</h3>
+        <ol>
+          <li><span class="ig-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg></span>
+            ${isIOS() ? 'Safari-ში' : 'ბრაუზერში'} შეეხეთ <b>გაზიარების</b> ღილაკს</li>
+          <li><span class="ig-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8.5v7M8.5 12h7"/></svg></span>
+            აირჩიეთ <b>„Add to Home Screen"</b> / <b>„ეკრანზე დამატება"</b></li>
+        </ol>
+        <p class="ig-note">ამის შემდეგ აპლიკაცია გაიხსნება სრულ ეკრანზე და იმუშავებს ინტერნეტის გარეშეც.</p>
+        <button class="ig-close">გასაგებია</button>
+      </div>`;
+    document.body.appendChild(guide);
+    requestAnimationFrame(() => guide.classList.add('open'));
+    const close = () => {
+      guide.classList.remove('open');
+      setTimeout(() => guide.remove(), 300);
+    };
+    guide.querySelector('.ig-scrim').addEventListener('click', close);
+    guide.querySelector('.ig-close').addEventListener('click', close);
+  }
+
   // ── data: lightweight index up front, per-service blocks on demand ──
   let INDEX = [];
   const loadedServices = {};
@@ -126,6 +183,10 @@
         <div class="home-cross" aria-hidden="true">☩</div>
         <h1>მეუფის კონდაკი</h1>
         <p class="tagline">წესი და განგება მღვდელმთავრის მსახურებისა</p>
+        <button class="install-btn" ${isStandalone() ? 'hidden' : ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 11l4.5 4.5L16.5 11"/><path d="M5 19.5h14"/></svg>
+          დააყენეთ ტელეფონზე
+        </button>
       </header>
       <h2 class="home-sect">მსახურებანი</h2>
       ${main}
@@ -137,6 +198,7 @@
     app.style.transition = '';
     app.querySelectorAll('.svc-card').forEach((b) =>
       b.addEventListener('click', () => { location.hash = '/' + b.dataset.id; }));
+    app.querySelector('.install-btn').addEventListener('click', showInstallUI);
     app.querySelector('.theme-btn').addEventListener('click', (e) => {
       theme = theme === 'light' ? 'dark' : 'light';
       store.set('theme', theme);
