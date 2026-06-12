@@ -333,7 +333,12 @@
     if (nextBtn) nextBtn.addEventListener('click', () => { location.hash = '/' + nextBtn.dataset.next; });
     fabTop.addEventListener('click', () => {
       restoreCancelled = true;
-      scroller.scrollTo({ top: 0, behavior: 'smooth' });
+      stopAuto();
+      const toBottom = fabTop.dataset.dir === 'down';
+      scroller.scrollTo({
+        top: toBottom ? scroller.scrollHeight - scroller.clientHeight : 0,
+        behavior: 'smooth',
+      });
     });
 
     // theme toggle in the top bar
@@ -541,7 +546,13 @@
       bar.style.width = (max > 0 ? (scroller.scrollTop / max) * 100 : 0) + '%';
       const i = topBlockIndex();
       tSec.textContent = sectionFor(i).text;
-      fabTop.hidden = scroller.scrollTop < scroller.clientHeight * 1.5;
+      // near the top the arrow points down (jump to end), after scrolling
+      // it points up (back to start); hidden only when there's no room
+      const down = scroller.scrollTop < scroller.clientHeight * 1.5;
+      fabTop.hidden = max < scroller.clientHeight;
+      fabTop.dataset.dir = down ? 'down' : 'up';
+      fabTop.textContent = down ? '↓' : '↑';
+      fabTop.setAttribute('aria-label', down ? 'ბოლოში' : 'თავიდან');
       clearTimeout(scrollTimer);
       scrollTimer = setTimeout(() => {
         if (scroller.isConnected) store.set('pos:' + svc.id, i);
