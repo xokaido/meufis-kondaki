@@ -5,3 +5,5 @@ node_modules/
 dist/
 dev-dist/
 public/data/
+test-results/
+playwright-report/
