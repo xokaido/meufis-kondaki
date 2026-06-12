@@ -234,6 +234,8 @@ function parseLines(lines, id, skipTitle, mode, landmarks = []) {
 // for every block that has text. Emphasis markers stripped.
 function searchEntries(svc) {
   const sectionFor = (i) => {
+    // "latest toc anchor ≤ i" — same walk as Reader.svelte's `section`
+    // derived; keep the two in sync if the anchoring rule ever changes.
     // parseLines always emits a toc anchor at i=0, so toc[0] covers any
     // blocks before the first explicit anchor; default to it defensively.
     let cur = svc.toc[0]?.text || '';

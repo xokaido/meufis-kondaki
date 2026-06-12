@@ -23,7 +23,7 @@
 <div class="cat">
   <header class="bar">
     <a class="back" href="#/" aria-label="უკან">‹</a>
-    <h1>{cat ? cat.name : ''}</h1>
+    <h1>{cat ? cat.name : ' '}</h1>
     <button class="srch" onclick={() => { searchOpen = true; }} aria-label="ძიება">⌕</button>
   </header>
   {#if failed}

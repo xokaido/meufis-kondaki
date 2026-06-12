@@ -35,6 +35,7 @@
   const NEXT = { vespers: 'matins', matins: 'liturgy' };
   const SPEEDS = [18, 32, 50, 75, 110]; // px per second
   const SPEED_LABELS = ['½×', '1×', '1½×', '2×', '3×'];
+  const SMOOTH = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 
   const items = $derived(data ? groupBlocks(data.blocks) : []);
   const marks = $derived(data ? roleMarks(data.blocks, $role) : { mine: new Set(), cue: new Set() });
@@ -47,6 +48,7 @@
     return s;
   });
   const section = $derived.by(() => {
+    // "latest toc anchor ≤ currentI" — same walk as build.cjs#searchEntries
     if (!data) return null;
     let cur = data.toc[0];
     for (const t of data.toc) { if (t.i <= currentI) cur = t; else break; }
@@ -104,7 +106,7 @@
     restoreCancelled = true;
     stopAuto();
     const y = Math.max(0, el.getBoundingClientRect().top + scroller.scrollTop - 86);
-    scroller.scrollTo({ top: y, behavior: smooth ? 'smooth' : 'auto' });
+    scroller.scrollTo({ top: y, behavior: smooth ? SMOOTH : 'auto' });
   }
 
   function onScroll() {
@@ -124,7 +126,7 @@
   function fabClick() {
     restoreCancelled = true;
     stopAuto();
-    scroller.scrollTo({ top: fabDir === 'down' ? scroller.scrollHeight - scroller.clientHeight : 0, behavior: 'smooth' });
+    scroller.scrollTo({ top: fabDir === 'down' ? scroller.scrollHeight - scroller.clientHeight : 0, behavior: SMOOTH });
   }
 
   // ── auto-scroll (engine in lib/autoscroll.js) ──
