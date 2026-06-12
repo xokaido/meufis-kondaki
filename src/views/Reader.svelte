@@ -1,7 +1,7 @@
 <script>
   import { untrack } from 'svelte';
   import { loadIndex, loadText } from '../lib/data.js';
-  import { getPos, setPos, theme, fontScale, wakeWanted, speedIdx, role } from '../lib/store.js';
+  import { getPos, setPos, theme, fontScale, wakeWanted, speedIdx, role, scriptStyle } from '../lib/store.js';
   import { setWake, wakeStatus } from '../lib/wake.js';
   import { groupBlocks } from '../lib/blocks.js';
   import { roleMarks, roleName, ROLE_ICONS, NO_ROLE_ICON } from '../lib/roles.js';
@@ -213,7 +213,7 @@
 <!-- Block styles size text via calc(… * var(--fs)); follow mode bumps the
      scale one step for distance readability without touching the user's
      saved mk:font preference. -->
-<div class="view" class:follow bind:this={appEl}
+<div class="view" class:follow class:khucuri={$scriptStyle === 'khucuri'} bind:this={appEl}
   style="--fs: {($fontScale * (follow ? 1.1 : 1)).toFixed(3)}">
   <div class="progress"><i style="width:{progress}%"></i></div>
 
@@ -232,6 +232,13 @@
       </button>
       <button class="tb" class:on={autoOn} onclick={() => (autoOn ? stopAuto() : startAuto())} aria-label="ავტო-გადახვევა">{autoOn ? '⏸︎' : '▶︎'}</button>
       <button class="tb" onclick={enterFollow} aria-label="თვალყურის დევნება">👁︎</button>
+      <!-- script switcher: shows the script you'll switch TO (matching the
+           theme toggle's convention); the glyph itself previews it -->
+      <button class="tb script-tb" class:khu={$scriptStyle !== 'khucuri'}
+        onclick={() => scriptStyle.update((s) => (s === 'khucuri' ? 'mkhedruli' : 'khucuri'))}
+        aria-label={$scriptStyle === 'khucuri' ? 'მხედრულზე გადართვა' : 'ხუცურზე გადართვა'}>
+        ა
+      </button>
       <button class="tb" onclick={() => theme.update((t) => (t === 'light' ? 'dark' : 'light'))} aria-label="თემა">{$theme === 'light' ? '☾' : '☀'}</button>
       <button class="tb" onclick={() => { sheetOpen = true; }} aria-label="სარჩევი">☰</button>
     </header>
@@ -320,6 +327,17 @@
   .t-name { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .t-sec { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tb { padding: 6px 9px; font-size: 15px; color: var(--muted); }
+  /* the toggle glyph previews the target script */
+  .script-tb.khu { font-family: 'Khutsuri Nuskhuri', inherit; }
+  /* khucuri mode: reading surface only — chrome stays mkhedruli.
+     unicode-range scopes the fonts to Georgian letters, so Latin and
+     punctuation keep falling back to Noto Serif. */
+  .view.khucuri .scrollwrap {
+    font-family: 'Khutsuri Nuskhuri', 'Noto Serif Georgian', 'Sylfaen', Georgia, serif;
+  }
+  .view.khucuri .ghead {
+    font-family: 'Khutsuri Asomtavruli', 'Noto Serif Georgian', Georgia, serif;
+  }
   .role-tb :global(svg) { width: 17px; height: 17px; display: block; }
   .role-tb.role-none { color: var(--muted); }
   .role-tb.role-bishop { color: var(--c-bishop); }

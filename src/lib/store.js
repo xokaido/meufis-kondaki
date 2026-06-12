@@ -23,6 +23,9 @@ export const showRubrics = persisted('rubrics', true);
 export const wakeWanted = persisted('wake', false);
 export const speedIdx = persisted('speed', 1);
 export const role = persisted('role', null);
+// reading script: mkhedruli (default) or khucuri (Nuskhuri body +
+// Asomtavruli heads, the traditional ecclesiastical pairing)
+export const scriptStyle = persisted('script', 'mkhedruli');
 
 // Reading positions: one key per text (old format), plus mk:last for the
 // home screen's continue card.

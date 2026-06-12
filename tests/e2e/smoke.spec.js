@@ -45,6 +45,27 @@ test('role switches in one tap from the reader top bar', async ({ page }) => {
   await expect(page.getByRole('button', { name: /როლის არჩევა — გუნდი/ })).toBeVisible();
 });
 
+test('script switcher toggles khucuri and persists', async ({ page }) => {
+  await page.goto(BASE + '#/t/vespers');
+  await page.waitForSelector('.reader [data-i]');
+  const family = () =>
+    page.locator('.scrollwrap').evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(await family()).not.toContain('Khutsuri');
+  await page.getByRole('button', { name: 'ხუცურზე გადართვა' }).click();
+  expect(await family()).toContain('Khutsuri Nuskhuri');
+  // headings take Asomtavruli over the Nuskhuri body (vespers' headings are
+  // all prayer-group summaries, i.e. .ghead)
+  const headFamily = await page.locator('.reader .ghead').first()
+    .evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(headFamily).toContain('Khutsuri Asomtavruli');
+  // persists across reload
+  await page.reload();
+  await page.waitForSelector('.reader [data-i]');
+  expect(await family()).toContain('Khutsuri Nuskhuri');
+  await page.getByRole('button', { name: 'მხედრულზე გადართვა' }).click();
+  expect(await family()).not.toContain('Khutsuri');
+});
+
 test('follow mode shows stepper and steps sections', async ({ page }) => {
   await page.goto(BASE + '#/t/vespers');
   await page.getByRole('button', { name: 'თვალყურის დევნება' }).click();
