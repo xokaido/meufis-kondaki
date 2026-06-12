@@ -244,7 +244,9 @@ function readLines(file) {
 // for every block that has text. Emphasis markers stripped.
 function searchEntries(svc) {
   const sectionFor = (i) => {
-    let cur = '';
+    // parseLines always emits a toc anchor at i=0, so toc[0] covers any
+    // blocks before the first explicit anchor; default to it defensively.
+    let cur = svc.toc[0]?.text || '';
     for (const t of svc.toc) { if (t.i <= i) cur = t.text; else break; }
     return cur;
   };

@@ -31,8 +31,9 @@ describe('parseLines', () => {
 
 describe('categories', () => {
   it('every source text has a category', () => {
+    const browsable = CATEGORIES.filter((c) => !c.soon).map((c) => c.id);
     for (const s of [...SOURCES, ...SECTIONS]) {
-      expect(['services', 'rites', 'prayers']).toContain(s.category);
+      expect(browsable).toContain(s.category);
     }
   });
   it('CATEGORIES lists browsable + coming-soon categories in order', () => {
@@ -58,5 +59,22 @@ describe('searchEntries', () => {
       [1, 'დასაწყისი', 'დიაკონი: მშვიდობით უფლისა მიმართ ვილოცოთ.'],
       [3, 'დასაწყისი', 'წმიდაო ღმერთო'],
     ]);
+  });
+
+  it('attributes blocks to the correct section across multiple anchors', () => {
+    const svc = {
+      blocks: [
+        { t: 'prayer', text: 'one' },
+        { t: 'prayer', text: 'two' },
+        { t: 'prayer', text: 'three' },
+        { t: 'prayer', text: 'four' },
+      ],
+      toc: [{ text: 'A', i: 0 }, { text: 'B', i: 2 }],
+    };
+    const e = searchEntries(svc);
+    expect(e[0][1]).toBe('A');
+    expect(e[1][1]).toBe('A');
+    expect(e[2][1]).toBe('B');
+    expect(e[3][1]).toBe('B');
   });
 });
