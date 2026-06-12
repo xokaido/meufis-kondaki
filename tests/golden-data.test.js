@@ -49,12 +49,16 @@ describe('golden data (real sources)', () => {
         // The landmark's match phrase must find a block, and that block must
         // be a TOC anchor. The anchor may carry a different label when the
         // block is itself a heading (dedup keeps the heading's own text).
+        // mirrors the builder: landmarks resolve in order, each scanning
+        // forward from the block after the previous landmark's anchor
         const tocIdx = new Set(t().toc.map((a) => a.i));
+        let from = 0;
         for (const [match] of t().landmarks) {
           const i = t().blocks.findIndex(
-            (b) => (b.text || '').includes(match) || (b.who || '').includes(match));
+            (b, idx) => idx >= from && ((b.text || '').includes(match) || (b.who || '').includes(match)));
           expect(i, `landmark "${match}" finds no block`).toBeGreaterThanOrEqual(0);
           expect(tocIdx.has(i), `landmark "${match}" block ${i} not in TOC`).toBe(true);
+          from = i + 1;
         }
       });
 
