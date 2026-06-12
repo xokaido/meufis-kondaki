@@ -1,5 +1,5 @@
 {
-  "name": "gulani",
+  "name": "gulani-web",
   "compatibility_date": "2026-06-12",
   // regenerate app/data/*.json and app/sw.js from the markdown sources
   // before every upload, so web edits to the .md files go live
