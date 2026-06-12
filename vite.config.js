@@ -1,12 +1,14 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { VitePWA } from 'vite-plugin-pwa';
+import { textsHotReload } from './scripts/vite-plugin-texts.js';
 
 export default defineConfig({
   // relative base: works at gulani.ge root AND xokaido.github.io/meufis-kondaki/
   base: './',
   plugins: [
     svelte(),
+    textsHotReload(),
     VitePWA({
       // prompt mode: a deploy landing while someone follows a live service
       // must never reload the page under them. The new SW waits; the home
