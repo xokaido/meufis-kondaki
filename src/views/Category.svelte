@@ -5,8 +5,9 @@
 
   let { id } = $props();
   let index = $state(null);
+  let failed = $state(false);
   let searchOpen = $state(false);
-  loadIndex().then((i) => { index = i; });
+  loadIndex().then((i) => { index = i; }).catch(() => { failed = true; });
 
   const cat = $derived(index ? index.categories.find((c) => c.id === id) : null);
   const texts = $derived(index ? index.texts.filter((t) => t.category === id) : []);
@@ -22,6 +23,12 @@
     <h1>{cat ? cat.name : ''}</h1>
     <button class="srch" onclick={() => { searchOpen = true; }} aria-label="ძიება">⌕</button>
   </header>
+  {#if failed}
+    <div class="err">
+      <p>ვერ ჩაიტვირთა — შეამოწმეთ კავშირი</p>
+      <button class="retry" onclick={() => location.reload()}>განახლება</button>
+    </div>
+  {/if}
   {#each texts as t (t.id)}
     <a class="card" href="#/t/{t.id}">
       <span class="main"><span class="nm">{t.name}</span><span class="sb">{t.subtitle}</span></span>
@@ -38,6 +45,8 @@
   .back { font-size: 26px; line-height: 1; text-decoration: none; color: var(--muted); padding: 0 8px 4px 0; }
   h1 { font-size: 17px; flex: 1; }
   .srch { margin-left: auto; font-size: 20px; line-height: 1; color: var(--muted); padding: 10px; }
+  .err { text-align: center; padding: 40px 0; color: var(--muted); }
+  .retry { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 18px; font-weight: 600; }
   .card { display: block; text-decoration: none; color: inherit; position: relative; background: var(--bg-sheet); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 9px; }
   .card .main { display: inline-flex; flex-direction: column; width: calc(100% - 20px); }
   .card .nm { font-size: 16px; font-weight: 600; }

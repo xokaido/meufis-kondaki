@@ -11,8 +11,12 @@ export default defineConfig({
       registerType: 'autoUpdate',
       // keep the SW filename the old app used so installed clients update in place
       filename: 'sw.js',
+      // not in the manifest icons, still wanted offline
+      includeAssets: ['icons/apple-touch-icon.png'],
       workbox: {
-        globPatterns: ['**/*.{js,css,html,woff2,png,json,webmanifest}'],
+        // icons + webmanifest are precached via the PWA manifest integration;
+        // globbing them too would duplicate the precache entries
+        globPatterns: ['**/*.{js,css,html,woff2,json}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,

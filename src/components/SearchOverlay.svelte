@@ -6,9 +6,14 @@
   let { onClose } = $props();
   let query = $state('');
   let idx = $state(null);
+  let failed = $state(false);
   let input;
 
-  loadSearchIndex().then((i) => { idx = i; });
+  function loadIdx() {
+    failed = false;
+    loadSearchIndex().then((i) => { idx = i; }).catch(() => { failed = true; });
+  }
+  loadIdx();
   $effect(() => { input && input.focus(); });
 
   const results = $derived(idx && query ? searchIndex(idx, query) : []);
@@ -36,6 +41,12 @@
     <button class="close" onclick={onClose}>დახურვა</button>
   </header>
   <div class="results">
+    {#if failed}
+      <div class="empty">
+        <p>ძიების ინდექსი ვერ ჩაიტვირთა</p>
+        <button class="retry" onclick={loadIdx}>კიდევ სცადეთ</button>
+      </div>
+    {/if}
     {#if query.trim().length >= 2 && idx}
       {#if grouped.length === 0}
         <p class="empty">ვერაფერი მოიძებნა</p>
@@ -67,4 +78,5 @@
   .body { font-size: 13.5px; color: var(--ink-soft); }
   .body mark { background: var(--accent-soft); color: var(--ink); font-weight: 600; border-radius: 3px; padding: 0 1px; }
   .empty { color: var(--muted); text-align: center; padding: 30px 0; }
+  .retry { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 18px; font-weight: 600; color: var(--ink); }
 </style>
