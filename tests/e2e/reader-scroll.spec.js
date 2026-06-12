@@ -29,7 +29,8 @@ test('follow mode actually enlarges the reader text', async ({ page }) => {
   const sizeOf = () =>
     page.locator('.reader .blk').first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
   const before = await sizeOf();
-  await page.getByRole('button', { name: 'თვალყურის დევნება' }).click();
+  await page.getByRole('button', { name: 'სარჩევი' }).click();
+  await page.getByRole('button', { name: /თვალყურის დევნება/ }).click();
   const during = await sizeOf();
   expect(during).toBeGreaterThan(before * 1.05);
   await page.getByRole('button', { name: /დასრულება/ }).click();

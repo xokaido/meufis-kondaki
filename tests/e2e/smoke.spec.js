@@ -74,11 +74,26 @@ test('script switcher toggles khucuri and persists', async ({ page }) => {
 
 test('follow mode shows stepper and steps sections', async ({ page }) => {
   await page.goto(BASE + '#/t/vespers');
-  await page.getByRole('button', { name: 'თვალყურის დევნება' }).click();
+  await page.getByRole('button', { name: 'სარჩევი' }).click();
+  await page.getByRole('button', { name: /თვალყურის დევნება/ }).click();
   await expect(page.getByRole('button', { name: 'შემდეგი სექცია' })).toBeVisible();
   await page.getByRole('button', { name: 'შემდეგი სექცია' }).click();
   await page.getByRole('button', { name: /დასრულება/ }).click();
   await expect(page.getByRole('button', { name: 'სარჩევი' })).toBeVisible();
+});
+
+test('top-bar icons reveal tooltips on hover', async ({ page }) => {
+  await page.goto(BASE + '#/t/vespers');
+  await page.waitForSelector('.reader [data-i]');
+  const menuBtn = page.getByRole('button', { name: 'სარჩევი' });
+  // tooltip content comes from the aria-label via CSS attr()
+  const content = () => menuBtn.evaluate((el) => getComputedStyle(el, '::after').content);
+  expect(await content()).toContain('სარჩევი');
+  const opacity = () => menuBtn.evaluate((el) => getComputedStyle(el, '::after').opacity);
+  expect(await opacity()).toBe('0');
+  await menuBtn.hover();
+  // 0.45s reveal delay + 0.15s fade
+  await expect.poll(opacity, { timeout: 3000 }).toBe('1');
 });
 
 test('theme toggle persists', async ({ page }) => {

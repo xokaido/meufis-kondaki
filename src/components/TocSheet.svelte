@@ -3,7 +3,7 @@
   import { setWake, wakeStatus } from '../lib/wake.js';
   import { dialog } from '../lib/dialog.js';
 
-  let { toc = [], currentI = 0, onGo, onClose, onPickRole } = $props();
+  let { toc = [], currentI = 0, onGo, onClose, onPickRole, onFollow } = $props();
 
   function fontStep(d) {
     fontScale.update((f) => Math.min(1.7, Math.max(0.8, +(f + d).toFixed(2))));
@@ -34,6 +34,7 @@
         : $wakeWanted && $wakeStatus === 'failed' ? 'ეკრანი — ვერ ჩაირთო' : 'ეკრანი'}
     </button>
     <button class="ctl one" onclick={onPickRole}>როლი</button>
+    <button class="ctl one" onclick={onFollow}>👁 თვალყურის დევნება</button>
   </div>
   <nav class="toc">
     {#each toc as t, n (t.i)}
@@ -48,7 +49,7 @@
   .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 40; width: 100%; }
   .sheet { position: fixed; left: 0; right: 0; bottom: 0; max-height: 72vh; display: flex; flex-direction: column; background: var(--bg-sheet); border-radius: 18px 18px 0 0; z-index: 41; padding: 8px 16px calc(14px + env(safe-area-inset-bottom)); box-shadow: var(--shadow); }
   .grip { width: 38px; height: 4px; border-radius: 2px; background: var(--line); margin: 4px auto 12px; }
-  .controls { display: flex; gap: 8px; margin-bottom: 12px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .ctl { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   .ctl button, .ctl.one { padding: 8px 12px; font-size: 13.5px; font-weight: 600; }
   .ctl.one.on { color: var(--accent); border-color: var(--accent); }
