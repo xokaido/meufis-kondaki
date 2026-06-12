@@ -4,7 +4,7 @@
   import { getPos, setPos, theme, fontScale, wakeWanted, speedIdx, role } from '../lib/store.js';
   import { setWake, wakeStatus } from '../lib/wake.js';
   import { groupBlocks } from '../lib/blocks.js';
-  import { roleMarks } from '../lib/roles.js';
+  import { roleMarks, roleName, ROLE_ICONS, NO_ROLE_ICON } from '../lib/roles.js';
   import { createAutoScroll } from '../lib/autoscroll.js';
   import { swipeback } from '../lib/swipeback.js';
   import Block from '../components/Block.svelte';
@@ -224,6 +224,12 @@
         <div class="t-name">{meta ? meta.name : ''}</div>
         <div class="t-sec">{section ? section.text : ''}</div>
       </div>
+      <!-- one-tap role switching: the icon doubles as a "which role am I"
+           indicator (colored per role, neutral person when none) -->
+      <button class="tb role-tb role-{$role || 'none'}" onclick={() => { roleSheetOpen = true; }}
+        aria-label="როლის არჩევა{$role ? ` — ${roleName($role)}` : ''}">
+        {@html $role ? ROLE_ICONS[$role] : NO_ROLE_ICON}
+      </button>
       <button class="tb" class:on={autoOn} onclick={() => (autoOn ? stopAuto() : startAuto())} aria-label="ავტო-გადახვევა">{autoOn ? '⏸︎' : '▶︎'}</button>
       <button class="tb" onclick={enterFollow} aria-label="თვალყურის დევნება">👁︎</button>
       <button class="tb" onclick={() => theme.update((t) => (t === 'light' ? 'dark' : 'light'))} aria-label="თემა">{$theme === 'light' ? '☾' : '☀'}</button>
@@ -314,6 +320,13 @@
   .t-name { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .t-sec { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tb { padding: 6px 9px; font-size: 15px; color: var(--muted); }
+  .role-tb :global(svg) { width: 17px; height: 17px; display: block; }
+  .role-tb.role-none { color: var(--muted); }
+  .role-tb.role-bishop { color: var(--c-bishop); }
+  .role-tb.role-priest { color: var(--c-priest); }
+  .role-tb.role-deacon { color: var(--c-deacon); }
+  .role-tb.role-reader { color: var(--c-reader); }
+  .role-tb.role-choir { color: var(--c-choir); }
   .tb.on { color: var(--accent); }
   .follow-top { justify-content: space-between; padding-left: 14px; padding-right: 14px; }
   .exit { border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; font-size: 12.5px; color: var(--muted); }

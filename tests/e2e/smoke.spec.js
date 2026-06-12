@@ -33,6 +33,18 @@ test('role highlight appears after picking choir', async ({ page }) => {
   await expect(page.locator('.blk.mine').first()).toBeVisible();
 });
 
+test('role switches in one tap from the reader top bar', async ({ page }) => {
+  await page.goto(BASE + '#/t/vespers');
+  await page.waitForSelector('.reader [data-i]');
+  await expect(page.locator('.blk.mine')).toHaveCount(0);
+  await page.getByRole('button', { name: 'როლის არჩევა' }).click();
+  await page.getByRole('button', { name: 'გუნდი', exact: true }).click();
+  // highlight applies immediately, no navigation needed
+  await expect(page.locator('.blk.mine').first()).toBeVisible();
+  // the top-bar icon now reflects the active role
+  await expect(page.getByRole('button', { name: /როლის არჩევა — გუნდი/ })).toBeVisible();
+});
+
 test('follow mode shows stepper and steps sections', async ({ page }) => {
   await page.goto(BASE + '#/t/vespers');
   await page.getByRole('button', { name: 'თვალყურის დევნება' }).click();

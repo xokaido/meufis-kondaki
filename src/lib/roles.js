@@ -11,6 +11,9 @@ export function roleName(id) {
   return r ? r.name : '';
 }
 
+// neutral "person" icon for the no-role state (mirrors ROLE_ICONS styling)
+export const NO_ROLE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M5.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>';
+
 // mine: indices of blocks spoken by `role`. cue: the nearest non-separator
 // block before each run of mine — "your entrance is next."
 export function roleMarks(blocks, role) {
