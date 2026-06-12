@@ -3,6 +3,7 @@
   import { theme, fontScale, showRubrics } from './lib/store.js';
   import Home from './views/Home.svelte';
   import Category from './views/Category.svelte';
+  import Reader from './views/Reader.svelte';
 
   let route = $state(parseRoute(location.hash));
 
@@ -27,10 +28,12 @@
   });
 </script>
 
-{#if route.view === 'home'}
-  <Home />
-{:else if route.view === 'category'}
-  <Category id={route.id} />
-{:else}
-  <main style="padding:2rem"><p>placeholder reader: {route.id}</p></main>
-{/if}
+{#key route.view + ':' + (route.id || '')}
+  {#if route.view === 'home'}
+    <Home />
+  {:else if route.view === 'category'}
+    <Category id={route.id} />
+  {:else}
+    <Reader id={route.id} block={route.block} />
+  {/if}
+{/key}

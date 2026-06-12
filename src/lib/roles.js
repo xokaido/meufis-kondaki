@@ -1,5 +1,8 @@
 export function roleName(id) { return id; } // replaced in Task 13
 
+// TEMP stub — real implementation lands in Task 13 (role marks)
+export function roleMarks(blocks, role) { return { mine: new Set(), cue: new Set() }; }
+
 export const ROLE_ICONS = {
   bishop: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5v19M8.5 6h7M6.5 10h11M8.5 13l7 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>',
   priest: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v17M7 9h10" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/></svg>',
