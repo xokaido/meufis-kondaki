@@ -13,6 +13,10 @@ describe('parseRoute', () => {
     expect(parseRoute('#/t/vespers')).toEqual({ view: 'reader', id: 'vespers', block: null });
     expect(parseRoute('#/t/liturgy?b=42')).toEqual({ view: 'reader', id: 'liturgy', block: 42 });
   });
+  it('non-numeric block param → null', () => {
+    expect(parseRoute('#/t/liturgy?b=abc')).toEqual({ view: 'reader', id: 'liturgy', block: null });
+    expect(parseRoute('#/t/liturgy?b=')).toEqual({ view: 'reader', id: 'liturgy', block: null });
+  });
   it('legacy ids redirect to reader', () => {
     expect(parseRoute('#/vespers')).toEqual({ view: 'reader', id: 'vespers', block: null, redirect: '#/t/vespers' });
     expect(parseRoute('#/kurtxevani').redirect).toBe('#/t/kurtxevani');
