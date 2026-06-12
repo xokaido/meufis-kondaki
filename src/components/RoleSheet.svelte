@@ -1,13 +1,14 @@
 <script>
   import { role } from '../lib/store.js';
   import { ROLES, ROLE_ICONS } from '../lib/roles.js';
+  import { dialog } from '../lib/dialog.js';
 
   let { onClose } = $props();
   function pick(id) { role.set(id); onClose(); }
 </script>
 
 <button class="scrim" onclick={onClose} aria-label="დახურვა"></button>
-<div class="sheet" role="dialog" aria-label="როლის არჩევა">
+<div class="sheet" role="dialog" aria-label="როლის არჩევა" use:dialog={{ onClose }}>
   <div class="grip"></div>
   <h3>ვინ ხართ მსახურებაზე?</h3>
   <p class="note">თქვენი სტრიქონები გამოიკვეთება — არაფერი იმალება</p>

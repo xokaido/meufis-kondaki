@@ -3,6 +3,7 @@
   import { theme, role, getPos, getLast } from '../lib/store.js';
   import { roleName } from '../lib/roles.js';
   import { isStandalone, isIOS, onInstallable, promptInstall } from '../lib/install.js';
+  import { dialog } from '../lib/dialog.js';
   import SearchOverlay from '../components/SearchOverlay.svelte';
   import RoleSheet from '../components/RoleSheet.svelte';
 
@@ -98,7 +99,7 @@
   {/if}
 
   {#if showGuide}
-    <div class="guide" role="dialog" aria-label="დაყენების ინსტრუქცია">
+    <div class="guide" role="dialog" aria-label="დაყენების ინსტრუქცია" use:dialog={{ onClose: () => { showGuide = false; } }}>
       <button class="scrim" onclick={() => { showGuide = false; }} aria-label="დახურვა"></button>
       <div class="gsheet">
         <h3>დააყენეთ ტელეფონზე</h3>

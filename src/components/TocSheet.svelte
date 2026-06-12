@@ -1,6 +1,7 @@
 <script>
   import { fontScale, showRubrics, wakeWanted } from '../lib/store.js';
   import { setWake } from '../lib/wake.js';
+  import { dialog } from '../lib/dialog.js';
 
   let { toc = [], currentI = 0, onGo, onClose, onPickRole } = $props();
 
@@ -19,7 +20,7 @@
 </script>
 
 <button class="scrim" onclick={onClose} aria-label="დახურვა"></button>
-<div class="sheet" role="dialog" aria-label="სარჩევი და პარამეტრები">
+<div class="sheet" role="dialog" aria-label="სარჩევი და პარამეტრები" use:dialog={{ onClose }}>
   <div class="grip"></div>
   <div class="controls">
     <div class="ctl"><button onclick={() => fontStep(-0.1)}>A−</button><button onclick={() => fontStep(0.1)}>A+</button></div>

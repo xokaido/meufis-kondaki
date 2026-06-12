@@ -1,6 +1,7 @@
 <script>
   import { loadSearchIndex } from '../lib/data.js';
   import { searchIndex, snippetParts } from '../lib/search.js';
+  import { dialog } from '../lib/dialog.js';
 
   let { onClose } = $props();
   let query = $state('');
@@ -28,7 +29,7 @@
   }
 </script>
 
-<div class="overlay" role="dialog" aria-label="ძიება">
+<div class="overlay" role="dialog" aria-label="ძიება" use:dialog={{ onClose, initialFocus: false }}>
   <header class="bar">
     <input bind:this={input} bind:value={query} placeholder="ძიება ყველა ტექსტში…"
       type="search" enterkeyhint="search" />
