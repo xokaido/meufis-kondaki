@@ -19,7 +19,7 @@
   });
 </script>
 
-<button class="scrim" onclick={onClose} aria-label="დახურვა"></button>
+<button class="scrim" onclick={onClose} tabindex="-1" aria-hidden="true"></button>
 <div class="sheet" role="dialog" aria-label="სარჩევი და პარამეტრები" use:dialog={{ onClose }}>
   <div class="grip"></div>
   <div class="controls">

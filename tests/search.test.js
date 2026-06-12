@@ -62,3 +62,12 @@ describe('snippetParts', () => {
     expect(normalizedWithMap(gnarly).norm).toBe(normalize(gnarly));
   });
 });
+
+describe('normalization cache', () => {
+  it('repeated searches over the same index return identical results', () => {
+    const a = searchIndex(IDX, 'უფალო შეგვიწყალენ');
+    const b = searchIndex(IDX, 'უფალო შეგვიწყალენ');
+    expect(b).toEqual(a);
+    expect(searchIndex(IDX, 'ვილოცოთ').length).toBe(1); // different query, cached norms
+  });
+});

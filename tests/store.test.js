@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { persisted, getPos, setPos, getLast, setLast } from '../src/lib/store.js';
+import { persisted, getPos, setPos, getLast, setLast, sweepPositions } from '../src/lib/store.js';
 import { get } from 'svelte/store';
 
 beforeEach(() => localStorage.clear());
@@ -31,5 +31,25 @@ describe('positions', () => {
   it('setLast is explicit too', () => {
     setLast('matins');
     expect(getLast().id).toBe('matins');
+  });
+});
+
+describe('sweepPositions', () => {
+  it('drops position keys for texts no longer in the index, keeps valid ones', () => {
+    setPos('vespers', 10);
+    setPos('ghost', 33);
+    localStorage.setItem('mk:theme', '"dark"'); // unrelated keys untouched
+    sweepPositions(new Set(['vespers', 'matins']));
+    expect(getPos('vespers')).toBe(10);
+    expect(localStorage.getItem('mk:pos:ghost')).toBe(null);
+    expect(localStorage.getItem('mk:theme')).toBe('"dark"');
+  });
+  it('clears mk:last when it points at a removed text', () => {
+    setLast('ghost');
+    sweepPositions(new Set(['vespers']));
+    expect(getLast()).toBe(null);
+    setLast('vespers');
+    sweepPositions(new Set(['vespers']));
+    expect(getLast().id).toBe('vespers');
   });
 });

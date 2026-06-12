@@ -46,6 +46,19 @@ export function snippetParts(body, query, context = 40) {
   return { before: body.length > 120 ? body.slice(0, 120) + '…' : body, match: '', after: '' };
 }
 
+// Entry bodies are normalized once per loaded index (lazily, on first
+// search) — after that every keystroke is a plain substring scan instead of
+// re-running the normalize regexes over the whole library.
+const normCache = new WeakMap();
+function normsFor(text) {
+  let norms = normCache.get(text);
+  if (!norms) {
+    norms = text.entries.map(([, , body]) => normalize(body));
+    normCache.set(text, norms);
+  }
+  return norms;
+}
+
 // Linear scan over the prebuilt index — at hundreds of texts this is a few
 // hundred KB of strings, fine on-device. entries: [blockIndex, section, text].
 export function searchIndex(index, query, limit = 60) {
@@ -53,8 +66,10 @@ export function searchIndex(index, query, limit = 60) {
   if (q.length < 2) return [];
   const out = [];
   for (const text of index) {
-    for (const [i, section, body] of text.entries) {
-      if (normalize(body).includes(q)) {
+    const norms = normsFor(text);
+    for (let k = 0; k < text.entries.length; k++) {
+      if (norms[k].includes(q)) {
+        const [i, section, body] = text.entries[k];
         out.push({ id: text.id, name: text.name, i, section, body });
         if (out.length >= limit) return out;
       }

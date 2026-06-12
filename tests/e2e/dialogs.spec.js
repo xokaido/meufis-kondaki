@@ -19,7 +19,7 @@ test('Escape closes the role sheet; Tab stays inside it while open', async ({ pa
   // tab through more stops than the sheet has — focus must remain inside
   for (let i = 0; i < 10; i++) await page.keyboard.press('Tab');
   const inside = await page.evaluate(() =>
-    !!document.activeElement.closest('.sheet, .scrim'));
+    !!document.activeElement.closest('.sheet'));
   expect(inside).toBe(true);
   await page.keyboard.press('Escape');
   await expect(sheet).toHaveCount(0);

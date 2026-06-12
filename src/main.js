@@ -1,6 +1,8 @@
 import { mount } from 'svelte';
 import { registerSW } from 'virtual:pwa-register';
 import { needRefresh, setUpdater } from './lib/update.js';
+import { loadIndex } from './lib/data.js';
+import { sweepPositions } from './lib/store.js';
 import './styles/tokens.css';
 import './styles/global.css';
 import App from './App.svelte';
@@ -18,3 +20,8 @@ setUpdater(registerSW({
 }));
 
 mount(App, { target: document.getElementById('app') });
+
+// non-blocking: prune saved positions for texts removed from the library
+loadIndex()
+  .then((i) => sweepPositions(new Set(i.texts.map((t) => t.id))))
+  .catch(() => {});

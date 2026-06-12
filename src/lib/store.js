@@ -30,3 +30,16 @@ export function getPos(id) { return raw.get('pos:' + id, 0); }
 export function setPos(id, i) { raw.set('pos:' + id, i); setLast(id); }
 export function getLast() { return raw.get('last', null); }
 export function setLast(id) { raw.set('last', { id, ts: Date.now() }); }
+
+// Drop mk:pos:* keys (and a stale mk:last) for texts that no longer exist —
+// keeps localStorage clean across content renames/removals.
+export function sweepPositions(validIds) {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      const m = key.match(/^mk:pos:(.+)$/);
+      if (m && !validIds.has(m[1])) localStorage.removeItem(key);
+    }
+    const last = getLast();
+    if (last && !validIds.has(last.id)) localStorage.removeItem('mk:last');
+  } catch { /* storage unavailable — nothing to sweep */ }
+}

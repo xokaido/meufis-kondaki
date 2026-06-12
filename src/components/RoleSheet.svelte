@@ -7,7 +7,9 @@
   function pick(id) { role.set(id); onClose(); }
 </script>
 
-<button class="scrim" onclick={onClose} aria-label="დახურვა"></button>
+<!-- pointer-only close affordance: keyboard uses Escape, SR users the options;
+     keeping it out of the tab order stops Tab escaping the aria-modal sheet -->
+<button class="scrim" onclick={onClose} tabindex="-1" aria-hidden="true"></button>
 <div class="sheet" role="dialog" aria-label="როლის არჩევა" use:dialog={{ onClose }}>
   <div class="grip"></div>
   <h3>ვინ ხართ მსახურებაზე?</h3>

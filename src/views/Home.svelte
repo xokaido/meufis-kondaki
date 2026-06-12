@@ -105,7 +105,7 @@
 
   {#if showGuide}
     <div class="guide" role="dialog" aria-label="დაყენების ინსტრუქცია" use:dialog={{ onClose: () => { showGuide = false; } }}>
-      <button class="scrim" onclick={() => { showGuide = false; }} aria-label="დახურვა"></button>
+      <button class="scrim" onclick={() => { showGuide = false; }} tabindex="-1" aria-hidden="true"></button>
       <div class="gsheet">
         <h3>დააყენეთ ტელეფონზე</h3>
         <ol>
