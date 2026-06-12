@@ -51,11 +51,14 @@ test('script switcher toggles khucuri and persists', async ({ page }) => {
   const family = () =>
     page.locator('.scrollwrap').evaluate((el) => getComputedStyle(el).fontFamily);
   expect(await family()).not.toContain('Khutsuri');
-  // sentence initials are Asomtavruli in BOTH scripts
+  // sentence initials follow the normal font in mkhedruli mode…
   const si = page.locator('.reader .blk .si').first();
-  expect(await si.evaluate((el) => getComputedStyle(el).fontFamily)).toContain('Khutsuri Asomtavruli');
+  const siFamily = () => si.evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(await siFamily()).not.toContain('Khutsuri');
   await page.getByRole('button', { name: 'ხუცურზე გადართვა' }).click();
   expect(await family()).toContain('Khutsuri Nuskhuri');
+  // …and become Asomtavruli capitals in khucuri mode
+  expect(await siFamily()).toContain('Khutsuri Asomtavruli');
   // headings take Asomtavruli over the Nuskhuri body (vespers' headings are
   // all prayer-group summaries, i.e. .ghead)
   const headFamily = await page.locator('.reader .ghead').first()

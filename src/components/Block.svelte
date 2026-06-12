@@ -43,9 +43,10 @@
   .dropcap > :global(p)::first-letter, .text.dropcap::first-letter, .prayer.dropcap::first-letter {
     float: left; font-size: 3.1em; line-height: .82; color: var(--accent); padding: .04em .08em 0 0; font-weight: 600;
   }
-  /* Sentence initials (.si spans injected by fmt) always render in
-     Asomtavruli — manuscript-style capital initials in both scripts. */
-  .blk :global(.si) {
+  /* Sentence initials (.si spans injected by fmt) render in Asomtavruli in
+     khucuri mode only — the manuscript convention of capital initials over
+     a Nuskhuri body. In mkhedruli mode they inherit the normal font. */
+  :global(.view.khucuri) .blk :global(.si) {
     font-family: 'Khutsuri Asomtavruli', 'Noto Serif Georgian', Georgia, serif;
   }
   /* khucuri mode (class set by Reader on .view): headings and drop-cap
