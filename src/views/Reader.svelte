@@ -56,6 +56,9 @@
     document.title = (meta ? meta.name + ' · ' : '') + 'მეუფის კონდაკი';
   });
 
+  // App remounts this view whenever id/block change, so reading `id` once
+  // at init is intentional — it can never go stale within a mount.
+  // svelte-ignore state_referenced_locally
   Promise.all([loadIndex(), loadText(id)]).then(([idx, d]) => {
     meta = idx.texts.find((t) => t.id === id) || null;
     next = NEXT[id] ? idx.texts.find((t) => t.id === NEXT[id]) : null;
