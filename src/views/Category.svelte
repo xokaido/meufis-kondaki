@@ -10,6 +10,9 @@
   loadIndex().then((i) => { index = i; }).catch(() => { failed = true; });
 
   const cat = $derived(index ? index.categories.find((c) => c.id === id) : null);
+  $effect(() => {
+    document.title = cat ? `${cat.name} · მეუფის კონდაკი` : 'მეუფის კონდაკი';
+  });
   const texts = $derived(index ? index.texts.filter((t) => t.category === id) : []);
   function pctFor(t) {
     const pos = getPos(t.id);

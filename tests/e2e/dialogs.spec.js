@@ -25,6 +25,15 @@ test('Escape closes the role sheet; Tab stays inside it while open', async ({ pa
   await expect(sheet).toHaveCount(0);
 });
 
+test('document title follows navigation and never goes stale', async ({ page }) => {
+  await page.goto(BASE + '#/t/vespers');
+  await expect(page).toHaveTitle(/მწუხრი/);
+  await page.getByRole('button', { name: 'უკან' }).click();
+  await expect(page).toHaveTitle('მეუფის კონდაკი');
+  await page.goto(BASE + '#/cat/rites');
+  await expect(page).toHaveTitle(/განგებანი/);
+});
+
 test('Escape closes the reader TOC sheet', async ({ page }) => {
   await page.goto(BASE + '#/t/vespers');
   await page.getByRole('button', { name: 'სარჩევი' }).click();

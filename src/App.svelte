@@ -5,7 +5,11 @@
   import Category from './views/Category.svelte';
   import Reader from './views/Reader.svelte';
 
-  let route = $state(parseRoute(location.hash));
+  // Resolve legacy URLs (#/vespers → #/t/vespers) during init so the reader
+  // never renders for one tick before the redirect lands.
+  const initial = parseRoute(location.hash);
+  if (initial.redirect) location.replace(initial.redirect);
+  let route = $state(initial.redirect ? { view: 'home' } : initial);
 
   function onHash() {
     const r = parseRoute(location.hash);
@@ -14,8 +18,13 @@
   }
   $effect(() => {
     addEventListener('hashchange', onHash);
-    onHash(); // handle a legacy URL on initial load too
     return () => removeEventListener('hashchange', onHash);
+  });
+
+  // Home's title lives here so it can't go stale after leaving the reader;
+  // Category and Reader set their own richer titles when their data loads.
+  $effect(() => {
+    if (route.view === 'home') document.title = 'მეუფის კონდაკი';
   });
 
   // global settings → document
