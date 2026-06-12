@@ -289,6 +289,15 @@
         <main class="reader">
           ${renderBlocks(svc.blocks)}
           <div class="fin">☩</div>
+          ${(() => {
+            // chain the main services in liturgical order
+            const NEXT = { vespers: 'matins', matins: 'liturgy' };
+            const next = NEXT[svc.id] && INDEX.find((s) => s.id === NEXT[svc.id]);
+            return next ? `<button class="next-svc" data-next="${next.id}">
+              <span class="nx-label">შემდეგი მსახურება</span>
+              <span class="nx-row"><span class="nx-name">${esc(next.name)}</span><span class="svc-go" aria-hidden="true">›</span></span>
+            </button>` : '';
+          })()}
         </main>
       </div>
       <button class="fab-top" aria-label="თავიდან" hidden>↑</button>
@@ -318,6 +327,8 @@
     let restoreCancelled = false;
 
     $('.back').addEventListener('click', () => { location.hash = ''; });
+    const nextBtn = $('.next-svc');
+    if (nextBtn) nextBtn.addEventListener('click', () => { location.hash = '/' + nextBtn.dataset.next; });
     fabTop.addEventListener('click', () => {
       restoreCancelled = true;
       scroller.scrollTo({ top: 0, behavior: 'smooth' });

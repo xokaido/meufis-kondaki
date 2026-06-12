@@ -563,6 +563,40 @@ details.pgroup .prayer { margin-top: 1em; }
   opacity: .8;
 }
 
+/* next service link at the end of a reader */
+.next-svc {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-top: 2.5em;
+  padding: 18px 20px;
+  background: linear-gradient(160deg, var(--bg-raise), var(--bg));
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold-dim);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  transition: transform .15s ease;
+}
+.next-svc:active { transform: scale(.985); }
+.next-svc .nx-label {
+  display: block;
+  font-size: .75rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.next-svc .nx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.next-svc .nx-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
 /* back-to-top */
 .fab-top {
   position: fixed;
