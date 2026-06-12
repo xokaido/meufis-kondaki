@@ -2,6 +2,7 @@
   import { parseRoute } from './lib/router.js';
   import { theme, fontScale, showRubrics } from './lib/store.js';
   import Home from './views/Home.svelte';
+  import Category from './views/Category.svelte';
 
   let route = $state(parseRoute(location.hash));
 
@@ -29,7 +30,7 @@
 {#if route.view === 'home'}
   <Home />
 {:else if route.view === 'category'}
-  <main style="padding:2rem"><p>placeholder category: {route.id}</p></main>
+  <Category id={route.id} />
 {:else}
   <main style="padding:2rem"><p>placeholder reader: {route.id}</p></main>
 {/if}
