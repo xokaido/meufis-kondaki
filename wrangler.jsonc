@@ -11,9 +11,12 @@
     "directory": "./dist",
     "not_found_handling": "single-page-application"
   },
-  // Custom domain: Cloudflare creates/manages the DNS record and certificate
-  // for the zone on deploy (the zone must exist in the same account).
+  // Custom domains: Cloudflare creates/manages the DNS records and
+  // certificates for the zone on deploy (the zone must exist in the account).
+  // NOTE: this list is authoritative — a deploy detaches any custom domain
+  // not listed here (that's how gulani.ge got dropped during the rename).
   "routes": [
-    { "pattern": "kondaki.ge", "custom_domain": true }
+    { "pattern": "kondaki.ge", "custom_domain": true },
+    { "pattern": "www.kondaki.ge", "custom_domain": true }
   ]
 }
