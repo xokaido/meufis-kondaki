@@ -1,0 +1,39 @@
+/* მეუფის კონდაკი — vellum / illuminated design tokens */
+:root {
+  /* light: parchment */
+  --bg: #f6efdd;
+  --bg-raise: #efe5cb;
+  --bg-sheet: #fbf5e6;
+  --ink: #33291b;
+  --ink-soft: #564a37;
+  --muted: #8a7a5c;
+  --accent: #9e2b25;          /* true rubric red */
+  --accent-soft: rgba(158, 43, 37, 0.07);
+  --line: #e2d6b8;
+  --c-bishop: #7d4a9e;
+  --c-priest: #aa4f2e;
+  --c-deacon: #8a6510;
+  --c-choir: #2e6e5a;
+  --c-reader: #38618c;
+  --shadow: 0 12px 32px rgba(90, 70, 30, 0.25);
+  --fs: 1;
+}
+
+[data-theme="dark"] {
+  /* dark: candlelit vellum */
+  --bg: #191310;
+  --bg-raise: #221a14;
+  --bg-sheet: #281f18;
+  --ink: #e8dcc2;
+  --ink-soft: #cdbfa4;
+  --muted: #9b8c74;
+  --accent: #d4604f;          /* vermilion — rubric red readable on dark */
+  --accent-soft: rgba(212, 96, 79, 0.1);
+  --line: #2e2620;
+  --c-bishop: #c49bdb;
+  --c-priest: #d98e73;
+  --c-deacon: #cfa14f;
+  --c-choir: #9ec7b9;
+  --c-reader: #8fb0d6;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+}
