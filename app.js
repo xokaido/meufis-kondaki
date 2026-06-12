@@ -596,6 +596,16 @@
   // ── boot ──
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
+    // When an updated service worker takes over (new content version),
+    // reload once so the page — and the manifest Safari reads for
+    // Add to Home Screen — reflect the new version immediately, not on
+    // the visit after. Position restore makes the reload invisible.
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded || !navigator.serviceWorker.controller) return;
+      reloaded = true;
+      location.reload();
+    });
   }
   fetchJson('data/index.json')
     .then((idx) => { INDEX = idx; route(); })
