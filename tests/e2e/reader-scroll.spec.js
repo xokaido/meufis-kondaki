@@ -37,6 +37,25 @@ test('follow mode actually enlarges the reader text', async ({ page }) => {
   expect(after).toBeCloseTo(before, 1);
 });
 
+test('swipe right navigates back home', async ({ page }) => {
+  await page.goto(BASE + '#/t/vespers');
+  await page.waitForSelector('.reader [data-i]');
+  await page.locator('.scrollwrap').evaluate((el) => {
+    const touch = (x, y) => new Touch({ identifier: 1, target: el, clientX: x, clientY: y });
+    const fire = (type, x, y) => el.dispatchEvent(new TouchEvent(type, {
+      touches: type === 'touchend' ? [] : [touch(x, y)],
+      changedTouches: [touch(x, y)],
+      bubbles: true,
+    }));
+    fire('touchstart', 40, 300);
+    fire('touchmove', 160, 305);   // locks horizontal (dx ≫ dy)
+    fire('touchmove', 260, 305);
+    fire('touchend', 330, 305);    // past a third of the 390px viewport
+  });
+  await expect(page).toHaveURL(/\/$|#\/?$/);
+  await expect(page.getByRole('heading', { name: 'მეუფის კონდაკი' })).toBeVisible();
+});
+
 test('auto-scroll keeps running and advancing', async ({ page }) => {
   await page.goto(BASE + '#/t/vespers');
   await page.waitForSelector('.reader [data-i]');

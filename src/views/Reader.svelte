@@ -5,6 +5,8 @@
   import { setWake } from '../lib/wake.js';
   import { groupBlocks } from '../lib/blocks.js';
   import { roleMarks } from '../lib/roles.js';
+  import { createAutoScroll } from '../lib/autoscroll.js';
+  import { swipeback } from '../lib/swipeback.js';
   import Block from '../components/Block.svelte';
   import TocSheet from '../components/TocSheet.svelte';
   import RoleSheet from '../components/RoleSheet.svelte';
@@ -26,7 +28,6 @@
   let currentI = $state(0);
   let fabDir = $state('down');
   let fabHidden = $state(true);
-  let auto = null;
   let autoOn = $state(false);
   let scrollTimer = null;
   let restoreCancelled = false;
@@ -126,31 +127,22 @@
     scroller.scrollTo({ top: fabDir === 'down' ? scroller.scrollHeight - scroller.clientHeight : 0, behavior: 'smooth' });
   }
 
-  // ── auto-scroll ──
-  function stopAuto() {
-    if (!auto) return;
-    cancelAnimationFrame(auto.raf);
-    auto = null;
-    autoOn = false;
-    if (!$wakeWanted && !follow) setWake(false);
-  }
-  function startAuto() {
-    if (auto) return;
-    restoreCancelled = true;
-    auto = { last: performance.now(), pos: scroller.scrollTop };
-    autoOn = true;
-    setWake(true); // hands-free reading keeps the screen on
-    const tick = (now) => {
-      if (!auto || !scroller.isConnected) { stopAuto(); return; }
-      auto.pos = Math.min(auto.pos + SPEEDS[$speedIdx] * (now - auto.last) / 1000,
-        scroller.scrollHeight - scroller.clientHeight);
-      auto.last = now;
-      scroller.scrollTop = auto.pos;
-      if (auto.pos >= scroller.scrollHeight - scroller.clientHeight) { stopAuto(); return; }
-      auto.raf = requestAnimationFrame(tick);
-    };
-    auto.raf = requestAnimationFrame(tick);
-  }
+  // ── auto-scroll (engine in lib/autoscroll.js) ──
+  const engine = createAutoScroll({
+    el: () => scroller,
+    speed: () => SPEEDS[$speedIdx],
+    onState: (on) => {
+      autoOn = on;
+      if (on) {
+        restoreCancelled = true;
+        setWake(true); // hands-free reading keeps the screen on
+      } else if (!$wakeWanted && !follow) {
+        setWake(false);
+      }
+    },
+  });
+  const stopAuto = () => engine.stop();
+  const startAuto = () => engine.start();
   function bumpSpeed(d) { speedIdx.update((s) => Math.min(SPEEDS.length - 1, Math.max(0, s + d))); }
 
   // ── follow mode ──
@@ -162,7 +154,8 @@
     goBlock(data.toc[target].i);
   }
 
-  // ── position restore + swipe back: attached once data renders ──
+  // ── position restore + scroll tracking: attached once data renders ──
+  // (swipe-back lives in lib/swipeback.js as a use: action on the scroller)
   // This is one-time-per-mount setup. Only `data`/`scroller` readiness may
   // re-trigger it; everything else runs inside untrack() so that state the
   // setup happens to read (currentI via onScroll, $wakeWanted, …) doesn't
@@ -205,56 +198,6 @@
     }
     onScroll();
     if ($wakeWanted) setWake(true);
-
-    // Swipe right anywhere to go home (Telegram-style back gesture); the
-    // view follows the finger, releasing past a third (or a quick flick)
-    // navigates back. Direction lock keeps vertical scrolling unaffected.
-    let sx = 0, sy = 0, t0g = 0, tracking = false, lockedH = false;
-    const reset = (animate) => {
-      if (animate) {
-        appEl.style.transition = 'transform .22s ease';
-        appEl.style.transform = 'translateX(0)';
-        setTimeout(() => { if (appEl) appEl.style.transition = ''; }, 240);
-      } else {
-        appEl.style.transition = '';
-        appEl.style.transform = '';
-      }
-      tracking = lockedH = false;
-    };
-    const ts = (e) => {
-      if (e.touches.length !== 1) return;
-      const t = e.touches[0];
-      sx = t.clientX; sy = t.clientY; t0g = performance.now();
-      tracking = true; lockedH = false;
-    };
-    const tm = (e) => {
-      if (!tracking) return;
-      const t = e.touches[0];
-      const dx = t.clientX - sx, dy = t.clientY - sy;
-      if (!lockedH) {
-        if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
-        if (dx > Math.abs(dy) * 1.4) lockedH = true;
-        else { tracking = false; return; }
-      }
-      appEl.style.transition = 'none';
-      appEl.style.transform = `translateX(${Math.max(0, dx)}px)`;
-    };
-    const te = (e) => {
-      if (!tracking) return;
-      const dx = e.changedTouches[0].clientX - sx;
-      const vx = dx / Math.max(1, performance.now() - t0g);
-      if (lockedH && (dx > innerWidth * 0.32 || (dx > 60 && vx > 0.45))) {
-        appEl.style.transition = 'transform .2s ease-out';
-        appEl.style.transform = 'translateX(100%)';
-        setTimeout(() => { location.hash = ''; }, 200);
-        tracking = lockedH = false;
-      } else reset(lockedH);
-    };
-    const tc = () => reset(true);
-    scroller.addEventListener('touchstart', ts, { passive: true });
-    scroller.addEventListener('touchmove', tm, { passive: true });
-    scroller.addEventListener('touchend', te, { passive: true });
-    scroller.addEventListener('touchcancel', tc, { passive: true });
 
     return () => {
       clearTimeout(scrollTimer);
@@ -299,7 +242,8 @@
     </div>
   {/if}
 
-  <div class="scrollwrap" bind:this={scroller} tabindex="-1">
+  <div class="scrollwrap" bind:this={scroller} tabindex="-1"
+    use:swipeback={{ target: () => appEl, onBack: () => { location.hash = ''; } }}>
     {#if failed}
       <div class="err"><p>ვერ ჩაიტვირთა — შეამოწმეთ კავშირი</p>
         <button onclick={() => location.reload()}>განახლება</button></div>
