@@ -1,5 +1,13 @@
 name: Build & Deploy
 
+# Deployment story:
+#  - PRIMARY: Cloudflare Workers builds and publishes https://gulani.ge on every
+#    push to main via its own git integration (config: wrangler.jsonc — it runs
+#    `npm ci && npm run build` and serves dist/). That happens outside this
+#    workflow.
+#  - BACKUP: this workflow verifies the project (check, unit, e2e) and publishes
+#    dist/ to gh-pages (https://xokaido.github.io/meufis-kondaki/).
+
 on:
   push:
     branches: [main]
@@ -10,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  verify-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -19,12 +27,25 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
 
-      - name: Install and build
-        run: |
-          npm ci
-          npm run build
+      - name: Install
+        run: npm ci
+
+      - name: Static checks
+        run: npm run check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run e2e
+
+      - name: Build
+        run: npm run build
 
       - name: Deploy dist/ to gh-pages
         uses: peaceiris/actions-gh-pages@v4

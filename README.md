@@ -4,10 +4,19 @@
 
 **ცოცხალი ვერსია: https://gulani.ge** (სარეზერვო: https://xokaido.github.io/meufis-kondaki/)
 
-ჰოსტინგი: Cloudflare Workers (სტატიკური ფაილები `dist/`-დან, კონფიგი —
-`wrangler.jsonc`; ყოველი push-ისას GitHub Actions თავად აშენებს `npm run build`-ს).
+ჰოსტინგი (ორი დამოუკიდებელი არხი):
+
+- **მთავარი — Cloudflare Workers** (https://gulani.ge): Cloudflare-ის საკუთარი
+  git-ინტეგრაცია ყოველ `main`-ზე push-ისას თავად უშვებს `npm ci && npm run build`-ს
+  (კონფიგი — `wrangler.jsonc`) და აქვეყნებს `dist/`-ს. ეს ამ რეპოს workflow-ების
+  გარეთ ხდება, Cloudflare-ის მხარეს.
+- **სარეზერვო — GitHub Pages** (https://xokaido.github.io/meufis-kondaki/):
+  `.github/workflows/deploy.yml` ჯერ ამოწმებს პროექტს (svelte-check, vitest,
+  Playwright) და მხოლოდ წარმატების შემდეგ აქვეყნებს `dist/`-ს `gh-pages`-ზე.
 
 ## გაშვება
+
+საჭიროა Node.js **20.19+** (რეკომენდებულია 22 — იხ. `.nvmrc`).
 
 **დეველოპმენტი:**
 
@@ -73,8 +82,10 @@ npm run build
 
 ## განახლების გამოქვეყნება (ავტომატური)
 
-ყოველი push `main`-ზე GitHub Actions-ი თავად უშვებს `npm run build`-ს და
-`dist/`-ს საქვეყნებს (`.github/workflows/deploy.yml`). ლოკალურად საკმარისია:
+ყოველი push `main`-ზე ორივე არხი თავად განახლდება: Cloudflare აშენებს და
+აქვეყნებს https://gulani.ge -ს, ხოლო GitHub Actions ტესტების გავლის შემდეგ
+ანახლებს სარეზერვო GitHub Pages-ს (`.github/workflows/deploy.yml`).
+ლოკალურად საკმარისია:
 
 ```sh
 git add -A && git commit -m "..." && git push origin main
