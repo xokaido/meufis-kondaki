@@ -21,11 +21,13 @@ jobs:
         with:
           node-version: 20
 
-      - name: Build app data and service worker
-        run: node build.js
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
 
-      - name: Deploy app/ to gh-pages
+      - name: Deploy dist/ to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./app
+          publish_dir: ./dist

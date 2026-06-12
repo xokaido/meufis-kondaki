@@ -1,13 +1,12 @@
 {
   "name": "gulani-web",
   "compatibility_date": "2026-06-12",
-  // regenerate app/data/*.json and app/sw.js from the markdown sources
-  // before every upload, so web edits to the .md files go live
+  // full build: markdown → public/data JSON, then Vite bundle into dist/
   "build": {
-    "command": "node build.js"
+    "command": "npm ci && npm run build"
   },
   "assets": {
-    "directory": "./app",
+    "directory": "./dist",
     "not_found_handling": "single-page-application"
   }
 }
