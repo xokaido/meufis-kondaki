@@ -8,7 +8,10 @@ export default defineConfig({
   plugins: [
     svelte(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // prompt mode: a deploy landing while someone follows a live service
+      // must never reload the page under them. The new SW waits; the home
+      // screen offers a refresh chip, and a normal app restart applies it.
+      registerType: 'prompt',
       // keep the SW filename the old app used so installed clients update in place
       filename: 'sw.js',
       // not in the manifest icons, still wanted offline
@@ -20,7 +23,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: true,
+        skipWaiting: false,
       },
       manifest: {
         name: 'გულანი',

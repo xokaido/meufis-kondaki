@@ -4,6 +4,7 @@
   import { roleName } from '../lib/roles.js';
   import { isStandalone, isIOS, onInstallable, promptInstall } from '../lib/install.js';
   import { dialog } from '../lib/dialog.js';
+  import { needRefresh, applyUpdate } from '../lib/update.js';
   import SearchOverlay from '../components/SearchOverlay.svelte';
   import RoleSheet from '../components/RoleSheet.svelte';
 
@@ -51,6 +52,10 @@
     </button>
   </header>
   <p class="tagline">წესი და განგება მღვდელმთავრის მსახურებისა</p>
+
+  {#if $needRefresh}
+    <button class="upd" onclick={applyUpdate}>⟳ ხელმისაწვდომია ახალი ვერსია — განახლება</button>
+  {/if}
   <button class="srch" onclick={() => { searchOpen = true; }}>⌕ ძიება ყველა ტექსტში…</button>
 
   {#if failed}
@@ -123,6 +128,7 @@
   h1 { font-size: 19px; flex: 1; }
   .badge { font-size: 12px; border: 1px solid var(--line); background: var(--bg-sheet); border-radius: 99px; padding: 4px 11px; color: var(--c-choir); font-weight: 700; }
   .tagline { color: var(--muted); font-size: 13px; margin: 4px 0 18px; }
+  .upd { display: block; width: 100%; text-align: center; background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); border-radius: 10px; padding: 9px 13px; font-size: 13.5px; font-weight: 600; margin: -6px 0 16px; }
   .srch { display: block; width: 100%; text-align: left; background: var(--bg-sheet); border: 1px solid var(--line); border-radius: 10px; padding: 10px 13px; color: var(--muted); font-size: 14px; margin-bottom: 16px; }
   .cont { display: block; text-decoration: none; color: inherit; background: var(--accent-soft); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; }
   .cont .lbl { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; display: block; }

@@ -1,5 +1,6 @@
 import { mount } from 'svelte';
 import { registerSW } from 'virtual:pwa-register';
+import { needRefresh, setUpdater } from './lib/update.js';
 import './styles/tokens.css';
 import './styles/global.css';
 import App from './App.svelte';
@@ -11,6 +12,9 @@ if ('caches' in window) {
     keys.filter((k) => k.startsWith('kondaki-')).forEach((k) => caches.delete(k)));
 }
 
-registerSW({ immediate: true });
+setUpdater(registerSW({
+  immediate: true,
+  onNeedRefresh() { needRefresh.set(true); },
+}));
 
 mount(App, { target: document.getElementById('app') });
