@@ -600,9 +600,11 @@
     // reload once so the page — and the manifest Safari reads for
     // Add to Home Screen — reflect the new version immediately, not on
     // the visit after. Position restore makes the reload invisible.
+    const hadController = !!navigator.serviceWorker.controller;
     let reloaded = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloaded || !navigator.serviceWorker.controller) return;
+      // skip the first-ever install (page came fresh from the network)
+      if (reloaded || !hadController) return;
       reloaded = true;
       location.reload();
     });
