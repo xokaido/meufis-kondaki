@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from 'svelte';
   import { loadIndex, loadText } from '../lib/data.js';
   import { getPos, setPos, theme, wakeWanted, speedIdx, role } from '../lib/store.js';
   import { setWake } from '../lib/wake.js';
@@ -162,8 +163,14 @@
   }
 
   // ── position restore + swipe back: attached once data renders ──
+  // This is one-time-per-mount setup. Only `data`/`scroller` readiness may
+  // re-trigger it; everything else runs inside untrack() so that state the
+  // setup happens to read (currentI via onScroll, $wakeWanted, …) doesn't
+  // become a dependency — a re-run would stack duplicate listeners, kill
+  // auto-scroll via cleanup, and re-yank the scroll to the saved position.
   $effect(() => {
     if (!data || !scroller) return;
+    return untrack(() => {
     scroller.addEventListener('scroll', onScroll, { passive: true });
     ['touchstart', 'wheel'].forEach((ev) => scroller.addEventListener(ev, stopAuto, { passive: true }));
 
@@ -254,6 +261,7 @@
       stopAuto();
       if (!$wakeWanted) setWake(false);
     };
+    });
   });
 </script>
 
