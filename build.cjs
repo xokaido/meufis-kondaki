@@ -1,27 +1,35 @@
 #!/usr/bin/env node
-// Parses the service markdown files into app/data.js for the reader app.
-// Run: node build.js
+// Parses the service markdown files into public/data/*.json for the app.
+// Run: node build.cjs
 
 const fs = require('fs');
 const path = require('path');
 
 // group 1: full services (one file each)
 const SOURCES = [
-  { file: 'მეუფის კონდაკი მწუხრი.md', id: 'vespers', name: 'მწუხრი', subtitle: 'წესი და განგება მწუხრისა' },
-  { file: 'მეუფის კონდაკი ცისკარი.md', id: 'matins', name: 'ცისკარი', subtitle: 'წესი და განგება ცისკრისა' },
-  { file: 'მეუფის_კონდაკი_ნუსხურად_ლიტურგია_ოქროპირისა_ქართულად.md', id: 'liturgy', name: 'ლიტურგია', subtitle: 'წმიდისა იოანე ოქროპირისა' },
+  { file: 'მეუფის კონდაკი მწუხრი.md', id: 'vespers', name: 'მწუხრი', subtitle: 'წესი და განგება მწუხრისა', category: 'services' },
+  { file: 'მეუფის კონდაკი ცისკარი.md', id: 'matins', name: 'ცისკარი', subtitle: 'წესი და განგება ცისკრისა', category: 'services' },
+  { file: 'მეუფის_კონდაკი_ნუსხურად_ლიტურგია_ოქროპირისა_ქართულად.md', id: 'liturgy', name: 'ლიტურგია', subtitle: 'წმიდისა იოანე ოქროპირისა', category: 'services' },
 ];
 
 // group 2: sections of the პარაკლისი და ლოცვანი file, split at exact title lines
 const SECTIONED_FILE = 'მეუფის კონდაკი ნუსხურად პარაკლისი და ლოცვანი.md';
 const SECTIONS = [
-  { title: 'კმევები', id: 'kmevebi', name: 'კმევები', subtitle: 'კმევის წესი მსახურებებზე' },
-  { title: 'მცირე პარაკლისი', id: 'paraklisi', name: 'მცირე პარაკლისი', subtitle: 'წესი მცირე პარაკლისისა', mode: 'hybrid' },
-  { title: 'ლიტანიობა', id: 'litanioba', name: 'ლიტანიობა', subtitle: 'წესი ლიტანიობისა', mode: 'hybrid' },
-  { title: 'ჯვართამაღლების ცისკარზე', id: 'jvari', name: 'ჯვართამაღლების ცისკარზე', subtitle: 'ჯვრის გამოსვენების განგება', mode: 'hybrid' },
-  { title: 'ლოცვები ზიარების წინ', id: 'ziareba', name: 'ლოცვები ზიარების წინ', subtitle: 'და სამადლობელი ზიარების შემდგომად', mode: 'text' },
-  { title: 'განსატევებელნი', id: 'gansatevebelni', name: 'განსატევებელნი', subtitle: 'სადღესასწაულო ჩამოლოცვები', mode: 'text' },
-  { title: 'მცირე კურთხევანი', id: 'kurtxevani', name: 'მცირე კურთხევანი', subtitle: 'ლოცვები სხვადასხვა შემთხვევისათვის', mode: 'text', endTitle: 'ზანდუკი' },
+  { title: 'კმევები', id: 'kmevebi', name: 'კმევები', subtitle: 'კმევის წესი მსახურებებზე', category: 'rites' },
+  { title: 'მცირე პარაკლისი', id: 'paraklisi', name: 'მცირე პარაკლისი', subtitle: 'წესი მცირე პარაკლისისა', mode: 'hybrid', category: 'rites' },
+  { title: 'ლიტანიობა', id: 'litanioba', name: 'ლიტანიობა', subtitle: 'წესი ლიტანიობისა', mode: 'hybrid', category: 'rites' },
+  { title: 'ჯვართამაღლების ცისკარზე', id: 'jvari', name: 'ჯვართამაღლების ცისკარზე', subtitle: 'ჯვრის გამოსვენების განგება', mode: 'hybrid', category: 'rites' },
+  { title: 'ლოცვები ზიარების წინ', id: 'ziareba', name: 'ლოცვები ზიარების წინ', subtitle: 'და სამადლობელი ზიარების შემდგომად', mode: 'text', category: 'prayers' },
+  { title: 'განსატევებელნი', id: 'gansatevebelni', name: 'განსატევებელნი', subtitle: 'სადღესასწაულო ჩამოლოცვები', mode: 'text', category: 'prayers' },
+  { title: 'მცირე კურთხევანი', id: 'kurtxevani', name: 'მცირე კურთხევანი', subtitle: 'ლოცვები სხვადასხვა შემთხვევისათვის', mode: 'text', endTitle: 'ზანდუკი', category: 'rites' },
+];
+
+const CATEGORIES = [
+  { id: 'services', name: 'მსახურებანი' },
+  { id: 'rites', name: 'განგებანი' },
+  { id: 'prayers', name: 'ლოცვანი' },
+  { id: 'propers', name: 'დღესასწაულნი', soon: true },
+  { id: 'scores', name: 'საგალობლები', soon: true },
 ];
 
 // Speaker label -> role. Longest-prefix match against the text before ":".
@@ -232,73 +240,74 @@ function readLines(file) {
   return fs.readFileSync(path.join(__dirname, file), 'utf-8').split(/\r?\n/);
 }
 
-const services = [];
-
-for (const src of SOURCES) {
-  const { blocks, toc } = parseLines(readLines(src.file), src.id, true);
-  services.push({ id: src.id, name: src.name, subtitle: src.subtitle, group: 0, blocks, toc });
+// Search index: per text, [blockIndex, owningSectionTitle, plainText]
+// for every block that has text. Emphasis markers stripped.
+function searchEntries(svc) {
+  const sectionFor = (i) => {
+    let cur = '';
+    for (const t of svc.toc) { if (t.i <= i) cur = t.text; else break; }
+    return cur;
+  };
+  const entries = [];
+  svc.blocks.forEach((b, i) => {
+    const text = ((b.who ? b.who + ': ' : '') + (b.text || '')).replace(/\*/g, '').trim();
+    if (text) entries.push([i, sectionFor(i), text]);
+  });
+  return entries;
 }
 
-// Split the sectioned file at its exact title lines.
-{
-  const lines = readLines(SECTIONED_FILE);
-  const starts = SECTIONS.map((s) => {
-    const i = lines.findIndex((l) => l.trim() === s.title);
-    if (i === -1) throw new Error(`section title not found: ${s.title}`);
-    return i;
-  });
-  for (let k = 1; k < starts.length; k++) {
-    if (starts[k] <= starts[k - 1]) throw new Error('section titles out of order');
+function main() {
+  const services = [];
+
+  for (const src of SOURCES) {
+    const { blocks, toc } = parseLines(readLines(src.file), src.id, true);
+    services.push({ ...src, blocks, toc });
   }
-  SECTIONS.forEach((s, k) => {
-    let end = k + 1 < starts.length ? starts[k + 1] : lines.length;
-    if (s.endTitle) {
-      const e = lines.findIndex((l, i) => i > starts[k] && l.trim() === s.endTitle);
-      if (e !== -1 && e < end) end = e;
+
+  {
+    const lines = readLines(SECTIONED_FILE);
+    const starts = SECTIONS.map((s) => {
+      const i = lines.findIndex((l) => l.trim() === s.title);
+      if (i === -1) throw new Error(`section title not found: ${s.title}`);
+      return i;
+    });
+    for (let k = 1; k < starts.length; k++) {
+      if (starts[k] <= starts[k - 1]) throw new Error('section titles out of order');
     }
-    const chunk = lines.slice(starts[k] + 1, end);
-    const { blocks, toc } = parseLines(chunk, s.id, false, s.mode);
-    services.push({ id: s.id, name: s.name, subtitle: s.subtitle, group: 1, blocks, toc });
-  });
-}
-
-// ── output: per-service JSON + lightweight index ──
-const appDir = path.join(__dirname, 'app');
-const dataDir = path.join(appDir, 'data');
-fs.mkdirSync(dataDir, { recursive: true });
-
-const index = services.map((s) => ({
-  id: s.id, name: s.name, subtitle: s.subtitle, group: s.group, blockCount: s.blocks.length,
-}));
-fs.writeFileSync(path.join(dataDir, 'index.json'), JSON.stringify(index));
-for (const s of services) {
-  fs.writeFileSync(path.join(dataDir, s.id + '.json'), JSON.stringify({ blocks: s.blocks, toc: s.toc }));
-}
-
-// ── service worker: inject content version + complete precache list ──
-function walk(dir, base) {
-  const out = [];
-  for (const name of fs.readdirSync(dir)) {
-    const p = path.join(dir, name);
-    if (fs.statSync(p).isDirectory()) out.push(...walk(p, base + name + '/'));
-    else if (name !== 'sw.js' && name !== '.DS_Store') out.push(base + name);
+    SECTIONS.forEach((s, k) => {
+      let end = k + 1 < starts.length ? starts[k + 1] : lines.length;
+      if (s.endTitle) {
+        const e = lines.findIndex((l, i) => i > starts[k] && l.trim() === s.endTitle);
+        if (e !== -1 && e < end) end = e;
+      }
+      const chunk = lines.slice(starts[k] + 1, end);
+      const { blocks, toc } = parseLines(chunk, s.id, false, s.mode);
+      services.push({ ...s, blocks, toc });
+    });
   }
-  return out;
-}
-const assets = walk(appDir, '');
-const crypto = require('crypto');
-const hash = crypto.createHash('sha1');
-for (const a of assets.sort()) hash.update(fs.readFileSync(path.join(appDir, a)));
-const version = hash.digest('hex').slice(0, 12);
 
-const swTemplate = fs.readFileSync(path.join(__dirname, 'sw.template.js'), 'utf-8');
-fs.writeFileSync(path.join(appDir, 'sw.js'),
-  swTemplate.replace('__VERSION__', version).replace('__ASSETS__', JSON.stringify(['./', ...assets])));
+  const dataDir = path.join(__dirname, 'public', 'data');
+  fs.mkdirSync(dataDir, { recursive: true });
 
-// Build report
-for (const s of services) {
-  const counts = {};
-  for (const b of s.blocks) counts[b.t] = (counts[b.t] || 0) + 1;
-  console.log(`${s.id}: ${s.blocks.length} blocks`, counts, `toc=${s.toc.length}`);
+  const index = {
+    categories: CATEGORIES,
+    texts: services.map((s) => ({
+      id: s.id, name: s.name, subtitle: s.subtitle, category: s.category, blockCount: s.blocks.length,
+    })),
+  };
+  fs.writeFileSync(path.join(dataDir, 'index.json'), JSON.stringify(index));
+  for (const s of services) {
+    fs.writeFileSync(path.join(dataDir, s.id + '.json'), JSON.stringify({ blocks: s.blocks, toc: s.toc }));
+  }
+  fs.writeFileSync(path.join(dataDir, 'search-index.json'),
+    JSON.stringify(services.map((s) => ({ id: s.id, name: s.name, entries: searchEntries(s) }))));
+
+  for (const s of services) {
+    const counts = {};
+    for (const b of s.blocks) counts[b.t] = (counts[b.t] || 0) + 1;
+    console.log(`${s.id}: ${s.blocks.length} blocks`, counts, `toc=${s.toc.length}`);
+  }
 }
-console.log(`version ${version}, ${assets.length} precached assets`);
+
+module.exports = { parseLines, roleFor, searchEntries, CATEGORIES, SOURCES, SECTIONS };
+if (require.main === module) main();
