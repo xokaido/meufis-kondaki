@@ -4,6 +4,7 @@
   import { roleName } from '../lib/roles.js';
   import { isStandalone, isIOS, onInstallable, promptInstall } from '../lib/install.js';
   import SearchOverlay from '../components/SearchOverlay.svelte';
+  import RoleSheet from '../components/RoleSheet.svelte';
 
   let index = $state(null);
   let failed = $state(false);
@@ -111,6 +112,7 @@
     </div>
   {/if}
   {#if searchOpen}<SearchOverlay onClose={() => { searchOpen = false; }} />{/if}
+  {#if roleSheetOpen}<RoleSheet onClose={() => { roleSheetOpen = false; }} />{/if}
 </div>
 
 <style>
