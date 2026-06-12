@@ -1,7 +1,31 @@
-export function roleName(id) { return id; } // replaced in Task 13
+export const ROLES = [
+  { id: 'bishop', name: 'მღვდელმთავარი' },
+  { id: 'priest', name: 'მღვდელი' },
+  { id: 'deacon', name: 'დიაკონი' },
+  { id: 'reader', name: 'მკითხველი' },
+  { id: 'choir', name: 'გუნდი' },
+];
 
-// TEMP stub — real implementation lands in Task 13 (role marks)
-export function roleMarks(blocks, role) { return { mine: new Set(), cue: new Set() }; }
+export function roleName(id) {
+  const r = ROLES.find((x) => x.id === id);
+  return r ? r.name : '';
+}
+
+// mine: indices of blocks spoken by `role`. cue: the nearest non-separator
+// block before each run of mine — "your entrance is next."
+export function roleMarks(blocks, role) {
+  const mine = new Set(), cue = new Set();
+  if (!role) return { mine, cue };
+  blocks.forEach((b, i) => { if (b.t === 'say' && b.role === role) mine.add(i); });
+  for (const i of mine) {
+    for (let j = i - 1; j >= 0; j--) {
+      if (blocks[j].t === 'sep') continue;
+      if (!mine.has(j)) cue.add(j);
+      break;
+    }
+  }
+  return { mine, cue };
+}
 
 export const ROLE_ICONS = {
   bishop: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5v19M8.5 6h7M6.5 10h11M8.5 13l7 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>',
