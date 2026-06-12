@@ -28,7 +28,7 @@
   });
 </script>
 
-{#key route.view + ':' + (route.id || '')}
+{#key route.view + ':' + (route.id || '') + ':' + (route.block ?? '')}
   {#if route.view === 'home'}
     <Home />
   {:else if route.view === 'category'}
