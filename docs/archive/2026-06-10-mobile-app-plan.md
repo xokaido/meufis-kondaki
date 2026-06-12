@@ -1,3 +1,5 @@
+> **ისტორიული დოკუმენტი / Historical document.** Snapshot of its date; paths and architecture may no longer match the current repo. See README.md for the current layout.
+
 # მეუფის კონდაკი — Mobile App Plan
 
 A plan for turning the existing web app (`app/` — vanilla HTML/CSS/JS, no build

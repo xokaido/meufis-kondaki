@@ -1,3 +1,5 @@
+> **ისტორიული დოკუმენტი / Historical document.** Snapshot of its date; paths and architecture may no longer match the current repo. See README.md for the current layout.
+
 # მეუფის კონდაკი Redesign Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

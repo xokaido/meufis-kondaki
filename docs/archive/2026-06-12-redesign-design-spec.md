@@ -1,3 +1,5 @@
+> **ისტორიული დოკუმენტი / Historical document.** Snapshot of its date; paths and architecture may no longer match the current repo. See README.md for the current layout.
+
 # მეუფის კონდაკი — Mobile-First Redesign
 
 **Date:** 2026-06-12

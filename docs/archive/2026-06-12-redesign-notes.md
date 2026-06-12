@@ -1,3 +1,5 @@
+> **ისტორიული დოკუმენტი / Historical document.** Snapshot of its date; paths and architecture may no longer match the current repo. See README.md for the current layout.
+
 # Redesign summary (feature/redesign)
 
 Branch `feature/redesign` is a complete Svelte 5 + Vite rewrite of the app
