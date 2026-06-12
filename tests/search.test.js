@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalize, searchIndex } from '../src/lib/search.js';
+import { normalize, searchIndex, snippetParts, normalizedWithMap } from '../src/lib/search.js';
 
 const IDX = [
   { id: 'vespers', name: 'მწუხრი', entries: [
@@ -35,5 +35,30 @@ describe('searchIndex', () => {
   });
   it('caps results at the limit', () => {
     expect(searchIndex(IDX, 'უფალო', 1).length).toBe(1);
+  });
+});
+
+describe('snippetParts', () => {
+  it('locates a match that only matches after punctuation normalization', () => {
+    const p = snippetParts('გუნდი: უფალო, შეგვიწყალენ.', 'უფალო შეგვიწყალენ');
+    expect(p.match).toBe('უფალო, შეგვიწყალენ');
+    expect(p.before.endsWith('გუნდი: ')).toBe(true);
+    expect(p.after).toBe('.');
+  });
+  it('adds ellipses around a mid-text match', () => {
+    const body = 'ა'.repeat(100) + ' საკვანძო სიტყვა ' + 'ბ'.repeat(100);
+    const p = snippetParts(body, 'საკვანძო');
+    expect(p.match).toBe('საკვანძო');
+    expect(p.before.startsWith('…')).toBe(true);
+    expect(p.after.endsWith('…')).toBe(true);
+  });
+  it('falls back to a head slice when nothing matches', () => {
+    const p = snippetParts('მოკლე ტექსტი', 'არარსებული');
+    expect(p.match).toBe('');
+    expect(p.before).toBe('მოკლე ტექსტი');
+  });
+  it('keeps its normalization identical to normalize()', () => {
+    const gnarly = '„უფალო",  შეგვი-წყალენ! (ამინ) — Lord·';
+    expect(normalizedWithMap(gnarly).norm).toBe(normalize(gnarly));
   });
 });

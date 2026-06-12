@@ -1,6 +1,6 @@
 <script>
   import { loadSearchIndex } from '../lib/data.js';
-  import { searchIndex } from '../lib/search.js';
+  import { searchIndex, snippetParts } from '../lib/search.js';
 
   let { onClose } = $props();
   let query = $state('');
@@ -22,14 +22,6 @@
     return g;
   });
 
-  function snippet(body) {
-    const at = body.toLowerCase().indexOf(query.trim().toLowerCase());
-    if (at === -1) return body.length > 120 ? body.slice(0, 120) + '…' : body;
-    const start = Math.max(0, at - 40);
-    const s = (start ? '…' : '') + body.slice(start, at + query.length + 60);
-    return s.length < body.length - start ? s + '…' : s;
-  }
-
   function go(r) {
     onClose();
     location.hash = `#/t/${r.id}?b=${r.i}`;
@@ -50,9 +42,10 @@
       {#each grouped as g (g.id)}
         <h3>{g.name}</h3>
         {#each g.hits as r (r.i)}
+          {@const p = snippetParts(r.body, query)}
           <button class="hit" onclick={() => go(r)}>
             <span class="sec">{r.section}</span>
-            <span class="body">{snippet(r.body)}</span>
+            <span class="body">{p.before}{#if p.match}<mark>{p.match}</mark>{/if}{p.after}</span>
           </button>
         {/each}
       {/each}
@@ -71,5 +64,6 @@
   .hit { display: block; width: 100%; text-align: left; background: var(--bg-sheet); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; margin-bottom: 7px; }
   .sec { display: block; font-size: 10.5px; color: var(--accent); font-weight: 700; }
   .body { font-size: 13.5px; color: var(--ink-soft); }
+  .body mark { background: var(--accent-soft); color: var(--ink); font-weight: 600; border-radius: 3px; padding: 0 1px; }
   .empty { color: var(--muted); text-align: center; padding: 30px 0; }
 </style>
