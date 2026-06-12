@@ -23,6 +23,20 @@ test('manual scroll is not yanked back when a saved position exists', async ({ p
   expect(top).toBeLessThan(50); // must NOT snap back to the saved position
 });
 
+test('follow mode actually enlarges the reader text', async ({ page }) => {
+  await page.goto(BASE + '#/t/vespers');
+  await page.waitForSelector('.reader [data-i]');
+  const sizeOf = () =>
+    page.locator('.reader .blk').first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  const before = await sizeOf();
+  await page.getByRole('button', { name: 'თვალყურის დევნება' }).click();
+  const during = await sizeOf();
+  expect(during).toBeGreaterThan(before * 1.05);
+  await page.getByRole('button', { name: /დასრულება/ }).click();
+  const after = await sizeOf();
+  expect(after).toBeCloseTo(before, 1);
+});
+
 test('auto-scroll keeps running and advancing', async ({ page }) => {
   await page.goto(BASE + '#/t/vespers');
   await page.waitForSelector('.reader [data-i]');

@@ -1,7 +1,7 @@
 <script>
   import { untrack } from 'svelte';
   import { loadIndex, loadText } from '../lib/data.js';
-  import { getPos, setPos, theme, wakeWanted, speedIdx, role } from '../lib/store.js';
+  import { getPos, setPos, theme, fontScale, wakeWanted, speedIdx, role } from '../lib/store.js';
   import { setWake } from '../lib/wake.js';
   import { groupBlocks } from '../lib/blocks.js';
   import { roleMarks } from '../lib/roles.js';
@@ -265,7 +265,11 @@
   });
 </script>
 
-<div class="view" class:follow bind:this={appEl}>
+<!-- Block styles size text via calc(… * var(--fs)); follow mode bumps the
+     scale one step for distance readability without touching the user's
+     saved mk:font preference. -->
+<div class="view" class:follow bind:this={appEl}
+  style="--fs: {($fontScale * (follow ? 1.1 : 1)).toFixed(3)}">
   <div class="progress"><i style="width:{progress}%"></i></div>
 
   {#if !follow}
@@ -369,7 +373,6 @@
   .speed-pill span { font-size: 12px; min-width: 28px; text-align: center; }
   .scrollwrap { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .reader { max-width: 560px; margin: 0 auto; padding: 18px 18px 40px; }
-  .view.follow .reader { font-size: 1.1em; }
   .pgroup summary { list-style: none; cursor: pointer; }
   .pgroup summary::-webkit-details-marker { display: none; }
   .ghead { color: var(--accent); font-size: calc(15px * var(--fs)); letter-spacing: .06em; margin: calc(26px * var(--fs)) 0 calc(12px * var(--fs)); text-align: center; }
