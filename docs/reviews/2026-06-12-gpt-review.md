@@ -169,3 +169,16 @@ node <precache-duplicate-and-coverage-check>
 node/playwright <offline-service-worker-smoke-check>
 node/playwright <install-guide-focus-check>
 ```
+
+---
+
+## Disposition (2026-06-12, branch `fix/gpt-review`)
+
+| Finding | Status |
+|---|---|
+| P1 Cloudflare deploy bypasses tests | Fixed — wrangler build command runs `check + test` before bundling; e2e gates gh-pages in Actions (no browsers in CF build image) |
+| P2 wake lock UI optimistic | Fixed — `wakeStatus` store (`off/active/failed/unsupported`); TocSheet button lights only on an actual lock and names the failure; follow-mode dot reflects real state; unit-tested |
+| P2 Chromium-only coverage | Fixed — WebKit Playwright project (offline excluded; SW is Chromium-only in Playwright). Immediately caught Safari's button-skipping Tab escaping dialogs — focus trap now cycles manually |
+| P3 install-guide focuses scrim | Already fixed by the OPUS M4 work (scrim tabindex=-1 + trap filter); regression e2e added proving focus lands on "გასაგებია" |
+| P3 stale preview server reuse | Fixed — `reuseExistingServer: !process.env.CI` |
+| P3 silent frontmatter typos | Fixed — unknown keys and invalid modes throw; filename id must equal frontmatter id |
