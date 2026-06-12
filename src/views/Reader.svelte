@@ -2,7 +2,7 @@
   import { untrack } from 'svelte';
   import { loadIndex, loadText } from '../lib/data.js';
   import { getPos, setPos, theme, fontScale, wakeWanted, speedIdx, role } from '../lib/store.js';
-  import { setWake } from '../lib/wake.js';
+  import { setWake, wakeStatus } from '../lib/wake.js';
   import { groupBlocks } from '../lib/blocks.js';
   import { roleMarks } from '../lib/roles.js';
   import { createAutoScroll } from '../lib/autoscroll.js';
@@ -232,7 +232,11 @@
   {:else}
     <header class="follow-top">
       <button class="exit" onclick={exitFollow}>✕ დასრულება</button>
-      <span class="wake-dot" title="ეკრანი არ ჩაქრება">●</span>
+      {#if $wakeStatus === 'active'}
+        <span class="wake-dot" title="ეკრანი არ ჩაქრება">●</span>
+      {:else}
+        <span class="wake-dot off" title="ეკრანის ჩაუქრობლობა ვერ ჩაირთო">○</span>
+      {/if}
     </header>
   {/if}
 
@@ -314,6 +318,7 @@
   .follow-top { justify-content: space-between; padding-left: 14px; padding-right: 14px; }
   .exit { border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; font-size: 12.5px; color: var(--muted); }
   .wake-dot { color: var(--accent); font-size: 10px; }
+  .wake-dot.off { color: var(--muted); }
   .speed-pill { position: absolute; top: calc(54px + env(safe-area-inset-top)); right: 12px; z-index: 31; display: flex; align-items: center; gap: 2px; background: var(--bg-sheet); border: 1px solid var(--line); border-radius: 99px; box-shadow: var(--shadow); }
   .speed-pill button { padding: 5px 12px; font-size: 16px; }
   .speed-pill span { font-size: 12px; min-width: 28px; text-align: center; }

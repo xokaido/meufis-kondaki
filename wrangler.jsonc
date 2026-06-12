@@ -1,9 +1,11 @@
 {
   "name": "gulani-web",
   "compatibility_date": "2026-06-12",
-  // full build: markdown → public/data JSON, then Vite bundle into dist/
+  // Test-gated production build: static checks + unit tests must pass before
+  // the Vite bundle is produced. Playwright e2e stays in GitHub Actions only
+  // (no browsers in Cloudflare's build image); it gates the gh-pages backup.
   "build": {
-    "command": "npm ci && npm run build"
+    "command": "npm ci && npm run check && npm test && npm run build"
   },
   "assets": {
     "directory": "./dist",

@@ -72,6 +72,12 @@ describe('parseFrontmatter', () => {
     expect(() => parseFrontmatter('---\nid: a\n---\n', 'x.md')).toThrow(/missing "name"/);
     expect(() => parseFrontmatter('---\nid: a\n', 'x.md')).toThrow(/unterminated/);
   });
+  it('rejects unknown keys and invalid modes (silent typos)', () => {
+    const base = 'id: a\nname: ბ\nsubtitle: გ\ncategory: rites\n';
+    expect(() => parseFrontmatter(`---\n${base}moed: hybrid\n---\n`, 'x.md')).toThrow(/unknown frontmatter key "moed"/);
+    expect(() => parseFrontmatter(`---\n${base}mode: hybird\n---\n`, 'x.md')).toThrow(/mode must be "hybrid" or "text"/);
+    expect(() => parseFrontmatter(`---\n${base}mode: hybrid\n---\n`, 'x.md')).not.toThrow();
+  });
 });
 
 describe('searchEntries', () => {

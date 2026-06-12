@@ -37,7 +37,8 @@ test('follow mode actually enlarges the reader text', async ({ page }) => {
   expect(after).toBeCloseTo(before, 1);
 });
 
-test('swipe right navigates back home', async ({ page }) => {
+test('swipe right navigates back home', async ({ page, browserName }) => {
+  test.skip(browserName === 'webkit', 'Touch() constructor is unavailable in Playwright WebKit');
   await page.goto(BASE + '#/t/vespers');
   await page.waitForSelector('.reader [data-i]');
   await page.locator('.scrollwrap').evaluate((el) => {

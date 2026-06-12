@@ -27,14 +27,15 @@ export function dialog(node, { onClose, initialFocus = true } = {}) {
     if (e.key !== 'Tab') return;
     const items = focusables(node);
     if (!items.length) return;
-    const first = items[0], last = items[items.length - 1];
-    if (e.shiftKey && (document.activeElement === first || !node.contains(document.activeElement))) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
+    // Cycle focus manually instead of trusting native tab order: Safari's
+    // default Tab skips buttons entirely, which would let focus escape the
+    // dialog (or go nowhere) on the very first keypress.
+    e.preventDefault();
+    const idx = items.indexOf(document.activeElement);
+    const next = e.shiftKey
+      ? items[idx <= 0 ? items.length - 1 : idx - 1]
+      : items[idx === -1 || idx === items.length - 1 ? 0 : idx + 1];
+    next.focus();
   }
 
   // capture: sheets live inside views that have their own key handling

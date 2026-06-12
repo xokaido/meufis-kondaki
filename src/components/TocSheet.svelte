@@ -1,6 +1,6 @@
 <script>
   import { fontScale, showRubrics, wakeWanted } from '../lib/store.js';
-  import { setWake } from '../lib/wake.js';
+  import { setWake, wakeStatus } from '../lib/wake.js';
   import { dialog } from '../lib/dialog.js';
 
   let { toc = [], currentI = 0, onGo, onClose, onPickRole } = $props();
@@ -25,7 +25,14 @@
   <div class="controls">
     <div class="ctl"><button onclick={() => fontStep(-0.1)}>A−</button><button onclick={() => fontStep(0.1)}>A+</button></div>
     <button class="ctl one" class:on={$showRubrics} onclick={() => showRubrics.update((r) => !r)}>განგება</button>
-    <button class="ctl one" class:on={$wakeWanted} onclick={toggleWake}>⏾ ეკრანი</button>
+    <!-- lights up only when the lock is actually held; shows the failure
+         honestly instead of a false "screen stays on" indicator -->
+    <button class="ctl one" class:on={$wakeWanted && $wakeStatus === 'active'}
+      class:fail={$wakeWanted && ($wakeStatus === 'failed' || $wakeStatus === 'unsupported')}
+      onclick={toggleWake}>
+      ⏾ {$wakeWanted && $wakeStatus === 'unsupported' ? 'ეკრანი — არ არის მხარდაჭერა'
+        : $wakeWanted && $wakeStatus === 'failed' ? 'ეკრანი — ვერ ჩაირთო' : 'ეკრანი'}
+    </button>
     <button class="ctl one" onclick={onPickRole}>როლი</button>
   </div>
   <nav class="toc">
@@ -45,6 +52,7 @@
   .ctl { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   .ctl button, .ctl.one { padding: 8px 12px; font-size: 13.5px; font-weight: 600; }
   .ctl.one.on { color: var(--accent); border-color: var(--accent); }
+  .ctl.one.fail { color: var(--muted); border-style: dashed; }
   .toc { overflow-y: auto; }
   .toc button { display: flex; gap: 10px; align-items: baseline; width: 100%; text-align: left; padding: 9px 6px; border-bottom: 1px solid var(--line); font-size: 14.5px; }
   .toc button.cur { color: var(--accent); font-weight: 700; }

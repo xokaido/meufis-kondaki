@@ -33,6 +33,8 @@ const ROLE_RULES = [
 // Frontmatter: '---' fenced key: value lines at the top of each text file.
 // Repeated `landmark:` lines accumulate as [match, label] pairs (split on '|').
 // Returns { meta, body } where body is the markdown after the closing fence.
+const FRONTMATTER_KEYS = ['id', 'name', 'subtitle', 'category', 'mode', 'skipTitle', 'landmark'];
+
 function parseFrontmatter(raw, file = '?') {
   const lines = raw.split(/\r?\n/);
   if (lines[0].trim() !== '---') throw new Error(`${file}: missing frontmatter`);
@@ -45,6 +47,9 @@ function parseFrontmatter(raw, file = '?') {
     const m = line.match(/^(\w+):\s*(.*)$/);
     if (!m) throw new Error(`${file}: bad frontmatter line: ${line}`);
     const [, key, value] = m;
+    if (!FRONTMATTER_KEYS.includes(key)) {
+      throw new Error(`${file}: unknown frontmatter key "${key}" (allowed: ${FRONTMATTER_KEYS.join(', ')})`);
+    }
     if (key === 'landmark') {
       const [match, label] = value.split('|').map((s) => s.trim());
       if (!match || !label) throw new Error(`${file}: landmark needs "match | label"`);
@@ -59,6 +64,9 @@ function parseFrontmatter(raw, file = '?') {
   for (const req of ['id', 'name', 'subtitle', 'category']) {
     if (!meta[req]) throw new Error(`${file}: frontmatter missing "${req}"`);
   }
+  if (meta.mode && !['hybrid', 'text'].includes(meta.mode)) {
+    throw new Error(`${file}: mode must be "hybrid" or "text", got "${meta.mode}"`);
+  }
   return { meta, bodyLines: lines.slice(i + 1) };
 }
 
@@ -70,6 +78,12 @@ function loadTexts() {
     .map((f) => {
       const { meta, bodyLines } = parseFrontmatter(
         fs.readFileSync(path.join(TEXTS_DIR, f), 'utf-8'), f);
+      // filename is <order>-<id>.md: the suffix must equal the frontmatter id
+      // so URLs stay predictable from the file listing
+      const suffix = f.replace(/^\d+-/, '').replace(/\.md$/, '');
+      if (suffix !== meta.id) {
+        throw new Error(`${f}: filename id "${suffix}" ≠ frontmatter id "${meta.id}"`);
+      }
       return { ...meta, file: f, bodyLines };
     });
 }

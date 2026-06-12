@@ -7,9 +7,9 @@
 ჰოსტინგი (ორი დამოუკიდებელი არხი):
 
 - **მთავარი — Cloudflare Workers** (https://gulani.ge): Cloudflare-ის საკუთარი
-  git-ინტეგრაცია ყოველ `main`-ზე push-ისას თავად უშვებს `npm ci && npm run build`-ს
-  (კონფიგი — `wrangler.jsonc`) და აქვეყნებს `dist/`-ს. ეს ამ რეპოს workflow-ების
-  გარეთ ხდება, Cloudflare-ის მხარეს.
+  git-ინტეგრაცია ყოველ `main`-ზე push-ისას უშვებს `npm ci && npm run check &&
+  npm test && npm run build`-ს (კონფიგი — `wrangler.jsonc`) — ტესტების ჩავარდნა
+  წყვეტს გამოქვეყნებას. ეს ამ რეპოს workflow-ების გარეთ ხდება, Cloudflare-ის მხარეს.
 - **სარეზერვო — GitHub Pages** (https://xokaido.github.io/meufis-kondaki/):
   `.github/workflows/deploy.yml` ჯერ ამოწმებს პროექტს (svelte-check, vitest,
   Playwright) და მხოლოდ წარმატების შემდეგ აქვეყნებს `dist/`-ს `gh-pages`-ზე.
