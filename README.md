@@ -2,7 +2,10 @@
 
 მობილურზე მორგებული ვებ-აპლიკაცია (PWA) მღვდელმთავრის მსახურებების თვალყურის დევნებისთვის.
 
-**ცოცხალი ვერსია: https://xokaido.github.io/meufis-kondaki/**
+**ცოცხალი ვერსია: https://gulani.ge** (სარეზერვო: https://xokaido.github.io/meufis-kondaki/)
+
+ჰოსტინგი: Cloudflare Workers (სტატიკური ფაილები `app/`-დან, კონფიგი —
+`wrangler.jsonc`; ყოველი push-ისას Cloudflare თავად უშვებს `node build.js`-ს).
 
 ## გაშვება
 

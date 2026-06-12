@@ -1,0 +1,13 @@
+{
+  "name": "gulani",
+  "compatibility_date": "2026-06-12",
+  // regenerate app/data/*.json and app/sw.js from the markdown sources
+  // before every upload, so web edits to the .md files go live
+  "build": {
+    "command": "node build.js"
+  },
+  "assets": {
+    "directory": "./app",
+    "not_found_handling": "single-page-application"
+  }
+}
