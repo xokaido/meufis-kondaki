@@ -1,0 +1,75 @@
+<script>
+  import { loadSearchIndex } from '../lib/data.js';
+  import { searchIndex } from '../lib/search.js';
+
+  let { onClose } = $props();
+  let query = $state('');
+  let idx = $state(null);
+  let input;
+
+  loadSearchIndex().then((i) => { idx = i; });
+  $effect(() => { input && input.focus(); });
+
+  const results = $derived(idx && query ? searchIndex(idx, query) : []);
+  // group consecutive results by text for display
+  const grouped = $derived.by(() => {
+    const g = [];
+    for (const r of results) {
+      const last = g[g.length - 1];
+      if (last && last.id === r.id) last.hits.push(r);
+      else g.push({ id: r.id, name: r.name, hits: [r] });
+    }
+    return g;
+  });
+
+  function snippet(body) {
+    const at = body.toLowerCase().indexOf(query.trim().toLowerCase());
+    if (at === -1) return body.length > 120 ? body.slice(0, 120) + '…' : body;
+    const start = Math.max(0, at - 40);
+    const s = (start ? '…' : '') + body.slice(start, at + query.length + 60);
+    return s.length < body.length - start ? s + '…' : s;
+  }
+
+  function go(r) {
+    onClose();
+    location.hash = `#/t/${r.id}?b=${r.i}`;
+  }
+</script>
+
+<div class="overlay" role="dialog" aria-label="ძიება">
+  <header class="bar">
+    <input bind:this={input} bind:value={query} placeholder="ძიება ყველა ტექსტში…"
+      type="search" enterkeyhint="search" />
+    <button class="close" onclick={onClose}>დახურვა</button>
+  </header>
+  <div class="results">
+    {#if query.trim().length >= 2 && idx}
+      {#if grouped.length === 0}
+        <p class="empty">ვერაფერი მოიძებნა</p>
+      {/if}
+      {#each grouped as g (g.id)}
+        <h3>{g.name}</h3>
+        {#each g.hits as r (r.i)}
+          <button class="hit" onclick={() => go(r)}>
+            <span class="sec">{r.section}</span>
+            <span class="body">{snippet(r.body)}</span>
+          </button>
+        {/each}
+      {/each}
+    {/if}
+  </div>
+</div>
+
+<style>
+  .overlay { position: fixed; inset: 0; z-index: 60; background: var(--bg); display: flex; flex-direction: column; }
+  .bar { display: flex; gap: 8px; padding: calc(10px + env(safe-area-inset-top)) 14px 10px; border-bottom: 1px solid var(--line); }
+  input { flex: 1; font: inherit; font-size: 15px; color: var(--ink); background: var(--bg-sheet); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; outline: none; }
+  input:focus { border-color: var(--accent); }
+  .close { color: var(--accent); font-size: 13.5px; font-weight: 600; }
+  .results { flex: 1; overflow-y: auto; padding: 10px 14px 30px; max-width: 560px; margin: 0 auto; width: 100%; }
+  h3 { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; }
+  .hit { display: block; width: 100%; text-align: left; background: var(--bg-sheet); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; margin-bottom: 7px; }
+  .sec { display: block; font-size: 10.5px; color: var(--accent); font-weight: 700; }
+  .body { font-size: 13.5px; color: var(--ink-soft); }
+  .empty { color: var(--muted); text-align: center; padding: 30px 0; }
+</style>
