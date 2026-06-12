@@ -43,18 +43,18 @@
   .dropcap > :global(p)::first-letter, .text.dropcap::first-letter, .prayer.dropcap::first-letter {
     float: left; font-size: 3.1em; line-height: .82; color: var(--accent); padding: .04em .08em 0 0; font-weight: 600;
   }
+  /* Sentence initials (.si spans injected by fmt) always render in
+     Asomtavruli — manuscript-style capital initials in both scripts. */
+  .blk :global(.si) {
+    font-family: 'Khutsuri Asomtavruli', 'Noto Serif Georgian', Georgia, serif;
+  }
   /* khucuri mode (class set by Reader on .view): headings and drop-cap
      initials take Asomtavruli over the Nuskhuri body — the traditional
-     manuscript pairing. Speaker labels stay mkhedruli (they're wayfinding,
-     not liturgical text). */
+     manuscript pairing. Speaker labels convert with everything else. */
   :global(.view.khucuri) .head,
   :global(.view.khucuri) .dropcap > :global(p)::first-letter,
   :global(.view.khucuri) .text.dropcap::first-letter,
   :global(.view.khucuri) .prayer.dropcap::first-letter {
     font-family: 'Khutsuri Asomtavruli', 'Noto Serif Georgian', Georgia, serif;
-  }
-  :global(.view.khucuri) .say .who > span,
-  :global(.view.khucuri) .you {
-    font-family: 'Noto Serif Georgian', 'Sylfaen', Georgia, serif;
   }
 </style>

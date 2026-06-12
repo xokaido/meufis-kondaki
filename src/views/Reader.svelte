@@ -232,9 +232,8 @@
       </button>
       <button class="tb" class:on={autoOn} onclick={() => (autoOn ? stopAuto() : startAuto())} aria-label="ავტო-გადახვევა">{autoOn ? '⏸︎' : '▶︎'}</button>
       <button class="tb" onclick={enterFollow} aria-label="თვალყურის დევნება">👁︎</button>
-      <!-- script switcher: shows the script you'll switch TO (matching the
-           theme toggle's convention); the glyph itself previews it -->
-      <button class="tb script-tb" class:khu={$scriptStyle !== 'khucuri'}
+      <!-- script switcher: the glyph reflects the CURRENT script -->
+      <button class="tb script-tb" class:khu={$scriptStyle === 'khucuri'}
         onclick={() => scriptStyle.update((s) => (s === 'khucuri' ? 'mkhedruli' : 'khucuri'))}
         aria-label={$scriptStyle === 'khucuri' ? 'მხედრულზე გადართვა' : 'ხუცურზე გადართვა'}>
         ა
@@ -327,7 +326,7 @@
   .t-name { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .t-sec { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tb { padding: 6px 9px; font-size: 15px; color: var(--muted); }
-  /* the toggle glyph previews the target script */
+  /* the toggle glyph reflects the active script */
   .script-tb.khu { font-family: 'Khutsuri Nuskhuri', inherit; }
   /* khucuri mode: reading surface only — chrome stays mkhedruli.
      unicode-range scopes the fonts to Georgian letters, so Latin and
