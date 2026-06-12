@@ -1,0 +1,8 @@
+# Served by Cloudflare Workers static assets (ignored by gh-pages).
+# style-src 'unsafe-inline' is required by the inline style= attributes the
+# app uses for progress widths and the font-scale variable.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
