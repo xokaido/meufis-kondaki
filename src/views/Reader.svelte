@@ -326,30 +326,34 @@
   .t-name { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .t-sec { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tb { padding: 6px 9px; font-size: 15px; color: var(--muted); }
-  /* Tooltips: sourced from each button's aria-label (one source of truth),
-     shown on hover/keyboard-focus after a short delay. Touch users discover
-     by tapping — these are for pointer/keyboard. */
   .topbar [aria-label] { position: relative; }
-  .topbar [aria-label]::after {
-    content: attr(aria-label);
-    position: absolute; top: calc(100% + 7px); left: 50%;
-    transform: translateX(-50%) translateY(-4px);
-    background: var(--bg-sheet); color: var(--ink);
-    border: 1px solid var(--line); border-radius: 8px;
-    padding: 4px 10px; font-size: 11.5px; font-weight: 400; white-space: nowrap;
-    font-family: 'Noto Serif Georgian', 'Sylfaen', Georgia, serif;
-    box-shadow: var(--shadow); pointer-events: none; opacity: 0; z-index: 35;
-    transition: opacity .15s ease .45s, transform .15s ease .45s;
+  /* Tooltips: sourced from each button's aria-label (one source of truth),
+     shown on hover/keyboard-focus after a short delay. Gated to hover-capable
+     pointers (mouse/trackpad) so touch devices never show them — on touch a
+     tap would leave the button in a sticky :hover state and the tooltip would
+     linger over the content. Touch users discover by tapping. */
+  @media (hover: hover) and (pointer: fine) {
+    .topbar [aria-label]::after {
+      content: attr(aria-label);
+      position: absolute; top: calc(100% + 7px); left: 50%;
+      transform: translateX(-50%) translateY(-4px);
+      background: var(--bg-sheet); color: var(--ink);
+      border: 1px solid var(--line); border-radius: 8px;
+      padding: 4px 10px; font-size: 11.5px; font-weight: 400; white-space: nowrap;
+      font-family: 'Noto Serif Georgian', 'Sylfaen', Georgia, serif;
+      box-shadow: var(--shadow); pointer-events: none; opacity: 0; z-index: 35;
+      transition: opacity .15s ease .45s, transform .15s ease .45s;
+    }
+    .topbar [aria-label]:hover::after,
+    .topbar [aria-label]:focus-visible::after {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+    /* edge buttons: keep tooltips inside the viewport */
+    .topbar .back::after { left: 0; transform: translateY(-4px); }
+    .topbar .back:hover::after, .topbar .back:focus-visible::after { transform: translateY(0); }
+    .topbar .tb:last-child::after { left: auto; right: 0; transform: translateY(-4px); }
+    .topbar .tb:last-child:hover::after, .topbar .tb:last-child:focus-visible::after { transform: translateY(0); }
   }
-  .topbar [aria-label]:hover::after,
-  .topbar [aria-label]:focus-visible::after {
-    opacity: 1; transform: translateX(-50%) translateY(0);
-  }
-  /* edge buttons: keep tooltips inside the viewport */
-  .topbar .back::after { left: 0; transform: translateY(-4px); }
-  .topbar .back:hover::after, .topbar .back:focus-visible::after { transform: translateY(0); }
-  .topbar .tb:last-child::after { left: auto; right: 0; transform: translateY(-4px); }
-  .topbar .tb:last-child:hover::after, .topbar .tb:last-child:focus-visible::after { transform: translateY(0); }
   /* the toggle glyph reflects the active script */
   .script-tb.khu { font-family: 'Khutsuri Nuskhuri', inherit; }
   /* khucuri mode: reading surface only — chrome stays mkhedruli.
