@@ -354,7 +354,11 @@
   .script-tb.khu { font-family: 'Khutsuri Nuskhuri', inherit; }
   /* khucuri mode: reading surface only — chrome stays mkhedruli.
      unicode-range scopes the fonts to Georgian letters, so Latin and
-     punctuation keep falling back to Noto Serif. */
+     punctuation keep falling back to Noto Serif.
+     --khu-fs nudges the Nuskhuri body up a touch (its glyphs run smaller
+     than mkhedruli at the same point size); blocks multiply it into --fs.
+     Asomtavruli headings keep their size and ignore it. */
+  .view.khucuri { --khu-fs: 1.18; }
   .view.khucuri .scrollwrap {
     font-family: 'Khutsuri Nuskhuri', 'Noto Serif Georgian', 'Sylfaen', Georgia, serif;
   }

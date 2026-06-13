@@ -25,15 +25,17 @@
 {/if}
 
 <style>
-  .blk { position: relative; margin-bottom: calc(15px * var(--fs)); font-size: calc(16.5px * var(--fs)); }
-  .say .who { display: flex; align-items: center; gap: 6px; font-size: calc(11.5px * var(--fs)); letter-spacing: .12em; text-transform: uppercase; font-weight: 700; margin-bottom: 3px; }
+  /* --khu-fs (set by Reader in khucuri mode, default 1) bumps the Nuskhuri
+     body text up slightly; Asomtavruli headings deliberately omit it. */
+  .blk { position: relative; margin-bottom: calc(15px * var(--fs)); font-size: calc(16.5px * var(--fs) * var(--khu-fs, 1)); }
+  .say .who { display: flex; align-items: center; gap: 6px; font-size: calc(11.5px * var(--fs) * var(--khu-fs, 1)); letter-spacing: .12em; text-transform: uppercase; font-weight: 700; margin-bottom: 3px; }
   .say .who :global(svg) { width: calc(15px * var(--fs)); height: calc(15px * var(--fs)); flex-shrink: 0; }
   .role-bishop .who { color: var(--c-bishop); }
   .role-priest .who { color: var(--c-priest); }
   .role-deacon .who { color: var(--c-deacon); }
   .role-choir .who { color: var(--c-choir); }
   .role-reader .who { color: var(--c-reader); }
-  .rubric { color: var(--accent); opacity: .88; font-style: italic; font-size: calc(14px * var(--fs)); }
+  .rubric { color: var(--accent); opacity: .88; font-style: italic; font-size: calc(14px * var(--fs) * var(--khu-fs, 1)); }
   .prayer { font-weight: 600; }
   .head { color: var(--accent); font-size: calc(15px * var(--fs)); letter-spacing: .06em; margin: calc(26px * var(--fs)) 0 calc(12px * var(--fs)); text-align: center; }
   .sep { text-align: center; color: var(--muted); margin: 18px 0; }
