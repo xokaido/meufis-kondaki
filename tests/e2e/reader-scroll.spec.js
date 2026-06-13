@@ -58,6 +58,41 @@ test('swipe right navigates back home', async ({ page, browserName }) => {
   await expect(page.getByRole('heading', { name: 'მეუფის კონდაკი' })).toBeVisible();
 });
 
+test('book mode paginates and flips on left/right taps', async ({ page }) => {
+  await page.goto(BASE + '#/t/vespers');
+  await page.waitForSelector('.reader [data-i]');
+  await page.evaluate(() => localStorage.removeItem('mk:book'));
+  await page.reload();
+  await page.waitForSelector('.reader [data-i]');
+
+  // enter book mode from the top bar
+  await page.getByRole('button', { name: 'წიგნის რეჟიმი' }).click();
+  await expect(page.locator('.view.book')).toBeVisible();
+  await expect(page.locator('.scrollwrap')).toHaveCSS('overflow', 'hidden');
+  const pageNum = page.locator('.page-num');
+  await expect(pageNum).toHaveText(/^1 \/ \d+$/);
+
+  const box = await page.locator('.scrollwrap').boundingBox();
+  const tap = (frac) => page.mouse.click(box.x + box.width * frac, box.y + box.height * 0.5);
+
+  // a tap on the right advances; once the page-turn settles, scrollLeft has
+  // moved by exactly one viewport
+  await tap(0.8);
+  await expect(pageNum).toHaveText(/^2 \//);
+  await expect
+    .poll(() => page.locator('.scrollwrap').evaluate((el) => Math.round(el.scrollLeft)))
+    .toBe(Math.round(box.width));
+
+  // a tap on the left goes back
+  await tap(0.15);
+  await expect(pageNum).toHaveText(/^1 \//);
+
+  // leaving book mode returns to continuous scroll
+  await page.getByRole('button', { name: 'გრაგნილის რეჟიმი' }).click();
+  await expect(page.locator('.view.book')).toHaveCount(0);
+  await expect(page.locator('.scrollwrap')).toHaveCSS('overflow-y', 'auto');
+});
+
 test('auto-scroll keeps running and advancing', async ({ page }) => {
   await page.goto(BASE + '#/t/vespers');
   await page.waitForSelector('.reader [data-i]');

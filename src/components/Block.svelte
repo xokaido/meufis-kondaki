@@ -45,6 +45,14 @@
   .dropcap > :global(p)::first-letter, .text.dropcap::first-letter, .prayer.dropcap::first-letter {
     float: left; font-size: 3.1em; line-height: .82; color: var(--accent); padding: .04em .08em 0 0; font-weight: 600;
   }
+  /* Book (paginated) mode: keep a block whole within one page — a speaker
+     label stranded from its line, or a split short prayer, reads badly. The
+     heading should not be the last thing on a page either. Set on .view by
+     the Reader; these elements are rendered here, hence the :global scope. */
+  :global(.view.book) .blk,
+  :global(.view.book) .head { break-inside: avoid; }
+  :global(.view.book) .head { break-after: avoid; }
+
   /* Sentence initials (.si spans injected by fmt) render in Asomtavruli in
      khucuri mode only — the manuscript convention of capital initials over
      a Nuskhuri body. In mkhedruli mode they inherit the normal font. */

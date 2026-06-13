@@ -26,6 +26,9 @@ export const role = persisted('role', null);
 // reading script: mkhedruli (default) or khucuri (Nuskhuri body +
 // Asomtavruli heads, the traditional ecclesiastical pairing)
 export const scriptStyle = persisted('script', 'mkhedruli');
+// reading layout: false = continuous scroll (default), true = paginated
+// "book" mode where a tap on the right/left flips to the next/previous page
+export const bookMode = persisted('book', false);
 
 // Reading positions: one key per text (old format), plus mk:last for the
 // home screen's continue card.

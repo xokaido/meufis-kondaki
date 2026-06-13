@@ -1,7 +1,7 @@
 <script>
-  import { untrack } from 'svelte';
+  import { untrack, tick } from 'svelte';
   import { loadIndex, loadText } from '../lib/data.js';
-  import { getPos, setPos, theme, fontScale, wakeWanted, speedIdx, role, scriptStyle } from '../lib/store.js';
+  import { getPos, setPos, theme, fontScale, wakeWanted, speedIdx, role, scriptStyle, bookMode } from '../lib/store.js';
   import { setWake, wakeStatus } from '../lib/wake.js';
   import { groupBlocks } from '../lib/blocks.js';
   import { roleMarks, roleName, ROLE_ICONS, NO_ROLE_ICON } from '../lib/roles.js';
@@ -32,10 +32,19 @@
   let scrollTimer = null;
   let restoreCancelled = false;
 
+  // ── book mode (paginated reading) ──
+  let bookPage = $state(0);   // current page index (0-based)
+  let pageCount = $state(1);  // total pages after layout
+  let pageStride = 0;         // px between page starts (== scroller width)
+  let bookM = 24;             // side/gutter margin in px (also page padding-left)
+
   const NEXT = { vespers: 'matins', matins: 'liturgy' };
   const SPEEDS = [18, 32, 50, 75, 110]; // px per second
   const SPEED_LABELS = ['½×', '1×', '1½×', '2×', '3×'];
   const SMOOTH = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  // open book / scroll-lines glyphs for the layout toggle (mirrors role icons)
+  const BOOK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6C9.8 4.6 7.1 4.1 4 4.4v13.2c3.1-.3 5.8.2 8 1.6 2.2-1.4 4.9-1.9 8-1.6V4.4c-3.1-.3-5.8.2-8 1.6Zm0 0v13" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>';
+  const SCROLL_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>';
 
   const items = $derived(data ? groupBlocks(data.blocks) : []);
   const marks = $derived(data ? roleMarks(data.blocks, $role) : { mine: new Set(), cue: new Set() });
@@ -105,11 +114,16 @@
     if (!el) return;
     restoreCancelled = true;
     stopAuto();
+    if ($bookMode) { applyPage(pageOf(i), smooth); return; }
     const y = Math.max(0, el.getBoundingClientRect().top + scroller.scrollTop - 86);
     scroller.scrollTo({ top: y, behavior: smooth ? SMOOTH : 'auto' });
   }
 
   function onScroll() {
+    // book mode drives its own progress/position from page flips, and the
+    // horizontal scrollTo we issue would otherwise be read as a (zero) vertical
+    // position here and corrupt the saved spot.
+    if ($bookMode) return;
     // iOS momentum can fire scroll events after teardown; a detached
     // scroller has all-zero rects which would corrupt the saved position.
     if (!scroller || !scroller.isConnected || scroller.clientHeight === 0) return;
@@ -156,6 +170,98 @@
     goBlock(data.toc[target].i);
   }
 
+  // ── book mode: CSS multi-column pagination ──
+  // The reader becomes a fixed-height multi-column flow wider than its
+  // viewport; .scrollwrap clips it (overflow hidden) and we move between
+  // "pages" by setting scrollLeft. Each column is exactly one viewport wide,
+  // so page N starts at N * (viewport width). Margins come from the column
+  // gap (2·M) plus a left page padding (M), which works out to an even M
+  // gutter on both sides of every page.
+  function bookReader() { return scroller ? scroller.querySelector('.reader') : null; }
+
+  // horizontal offset of a block within the column flow → its page index.
+  // The element/reader rects both shift with scrollLeft, so their difference
+  // is scroll-independent.
+  function pageOf(i) {
+    const reader = bookReader();
+    if (!reader) return 0;
+    const el = reader.querySelector(`[data-i="${i}"]`) || reader.querySelector('[data-i]');
+    if (!el) return 0;
+    const x = el.getBoundingClientRect().left - reader.getBoundingClientRect().left;
+    return Math.min(pageCount - 1, Math.max(0, Math.round((x - bookM) / pageStride)));
+  }
+
+  // first block whose column lands on (or after) page p — the "top" of the page
+  function blockIndexForPage(p) {
+    const reader = bookReader();
+    if (!reader) return currentI;
+    const left0 = reader.getBoundingClientRect().left;
+    let best = 0;
+    for (const el of reader.querySelectorAll('[data-i]')) {
+      const bp = Math.round((el.getBoundingClientRect().left - left0 - bookM) / pageStride);
+      if (bp >= p) return +el.dataset.i;
+      best = +el.dataset.i;
+    }
+    return best;
+  }
+
+  function applyPage(p, smooth) {
+    if (!scroller) return;
+    p = Math.min(pageCount - 1, Math.max(0, p));
+    bookPage = p;
+    scroller.scrollTo({ left: p * pageStride, top: 0, behavior: smooth ? SMOOTH : 'auto' });
+    progress = pageCount > 1 ? (p / (pageCount - 1)) * 100 : 100;
+    const i = blockIndexForPage(p);
+    currentI = i;
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => { if (scroller && scroller.isConnected) setPos(id, i); }, 300);
+  }
+
+  function flip(d) { applyPage(bookPage + d, true); }
+
+  // (re)compute column metrics + page count, keeping `anchorI` on screen
+  function relayout(anchorI) {
+    const reader = bookReader();
+    if (!reader || !scroller) return;
+    reader.querySelectorAll('details.pgroup').forEach((d) => { d.open = true; });
+    const cw = scroller.clientWidth;
+    if (!cw) return;
+    bookM = Math.max(20, Math.round((cw - 600) / 2)); // cap line length ~600px
+    reader.style.setProperty('--col-w', (cw - 2 * bookM) + 'px');
+    reader.style.setProperty('--col-gap', (2 * bookM) + 'px');
+    reader.style.setProperty('--col-pad', bookM + 'px');
+    pageStride = cw;
+    // forces reflow before measuring the now-paginated width
+    pageCount = Math.max(1, Math.round((reader.scrollWidth + 2 * bookM) / cw));
+    applyPage(anchorI != null ? pageOf(anchorI) : bookPage, false);
+  }
+
+  // a tap in the left third turns back, anywhere else turns forward
+  function onTap(e) {
+    if (!$bookMode || !scroller) return;
+    if (e.target.closest('a, button, summary, input, textarea, [contenteditable]')) return;
+    const sel = window.getSelection && String(window.getSelection());
+    if (sel) return; // a long-press selection shouldn't flip the page
+    const rect = scroller.getBoundingClientRect();
+    flip(e.clientX - rect.left < rect.width * 0.32 ? -1 : 1);
+  }
+
+  function toggleBook() {
+    const anchor = currentI;
+    if ($bookMode) {
+      bookMode.set(false);
+      tick().then(() => {
+        if (!scroller) return;
+        scroller.scrollLeft = 0;
+        bookPage = 0; pageCount = 1;
+        goBlock(anchor); // land back near the same spot in scroll mode
+      });
+    } else {
+      stopAuto();
+      bookMode.set(true); // the book $effect paginates and anchors to currentI
+    }
+  }
+
   // ── position restore + scroll tracking: attached once data renders ──
   // (swipe-back lives in lib/swipeback.js as a use: action on the scroller)
   // This is one-time-per-mount setup. Only `data`/`scroller` readiness may
@@ -171,7 +277,9 @@
 
     // restore: deep-link block param wins over the saved position
     const target = block != null ? block : getPos(id);
-    const savedEl = target > 2 || block != null ? jumpTarget(target) : null;
+    // seed the position tracker so book mode can anchor to it on first layout
+    currentI = target;
+    const savedEl = !$bookMode && (target > 2 || block != null) ? jumpTarget(target) : null;
     if (savedEl) {
       const targetY = () => Math.max(0, savedEl.getBoundingClientRect().top + scroller.scrollTop - 86);
       scroller.scrollTop = targetY();
@@ -208,12 +316,41 @@
     };
     });
   });
+
+  // ── book mode: (re)paginate on enter, and whenever the layout-affecting
+  // settings change (font size, script) or the viewport resizes. Re-running
+  // keeps the current block on screen so nothing is lost across a reflow. ──
+  $effect(() => {
+    if (!$bookMode || !data || !scroller) return;
+    void $fontScale; void $scriptStyle; // re-paginate when these change
+    const anchor = untrack(() => currentI);
+    let raf = requestAnimationFrame(() => untrack(() => relayout(anchor)));
+    const onResize = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => untrack(() => relayout(currentI)));
+    };
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { flip(1); e.preventDefault(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { flip(-1); e.preventDefault(); }
+    };
+    window.addEventListener('resize', onResize);
+    window.addEventListener('keydown', onKey);
+    let done = false;
+    // late web-font swaps change line metrics → re-measure once they land
+    document.fonts?.ready.then(() => { if (!done && untrack(() => $bookMode)) untrack(() => relayout(currentI)); });
+    return () => {
+      done = true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('keydown', onKey);
+    };
+  });
 </script>
 
 <!-- Block styles size text via calc(… * var(--fs)); follow mode bumps the
      scale one step for distance readability without touching the user's
      saved mk:font preference. -->
-<div class="view" class:follow class:khucuri={$scriptStyle === 'khucuri'} bind:this={appEl}
+<div class="view" class:follow class:book={$bookMode} class:khucuri={$scriptStyle === 'khucuri'} bind:this={appEl}
   style="--fs: {($fontScale * (follow ? 1.1 : 1)).toFixed(3)}">
   <div class="progress"><i style="width:{progress}%"></i></div>
 
@@ -230,7 +367,14 @@
         aria-label="როლის არჩევა{$role ? ` — ${roleName($role)}` : ''}">
         {@html $role ? ROLE_ICONS[$role] : NO_ROLE_ICON}
       </button>
-      <button class="tb" class:on={autoOn} onclick={() => (autoOn ? stopAuto() : startAuto())} aria-label="ავტო-გადახვევა">{autoOn ? '⏸︎' : '▶︎'}</button>
+      {#if !$bookMode}
+        <button class="tb" class:on={autoOn} onclick={() => (autoOn ? stopAuto() : startAuto())} aria-label="ავტო-გადახვევა">{autoOn ? '⏸︎' : '▶︎'}</button>
+      {/if}
+      <!-- reading layout: continuous scroll ⇄ paginated "book" (tap to flip) -->
+      <button class="tb book-tb" class:on={$bookMode} onclick={toggleBook}
+        aria-label={$bookMode ? 'გრაგნილის რეჟიმი' : 'წიგნის რეჟიმი'}>
+        {@html $bookMode ? SCROLL_ICON : BOOK_ICON}
+      </button>
       <!-- script switcher: the glyph reflects the CURRENT script -->
       <button class="tb script-tb" class:khu={$scriptStyle === 'khucuri'}
         onclick={() => scriptStyle.update((s) => (s === 'khucuri' ? 'mkhedruli' : 'khucuri'))}
@@ -259,7 +403,12 @@
     </div>
   {/if}
 
-  <div class="scrollwrap" bind:this={scroller} tabindex="-1"
+  <!-- onTap only acts in book mode (page-flip on a left/right tap); the keyboard
+       equivalent is the Arrow/Page/Space handler wired in the book $effect, so
+       the pointer handler here is a progressive enhancement. -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="scrollwrap" bind:this={scroller} tabindex="-1" onclick={onTap}
     use:swipeback={{ target: () => appEl, onBack: () => { location.hash = ''; } }}>
     {#if failed}
       <div class="err"><p>ვერ ჩაიტვირთა — შეამოწმეთ კავშირი</p>
@@ -293,11 +442,15 @@
     {/if}
   </div>
 
-  {#if !follow}
+  {#if $bookMode && data}
+    <div class="page-num" aria-hidden="true">{bookPage + 1} / {pageCount}</div>
+  {/if}
+
+  {#if !follow && !$bookMode}
     <button class="fab" hidden={fabHidden} onclick={fabClick} aria-label={fabDir === 'down' ? 'ბოლოში' : 'თავიდან'}>
       {fabDir === 'down' ? '↓' : '↑'}
     </button>
-  {:else if data}
+  {:else if follow && data}
     <FollowBar
       sectionName={section ? section.text : ''}
       pos={sectionIdx + 1} total={data.toc.length}
@@ -377,6 +530,7 @@
   .role-tb.role-reader { color: var(--c-reader); }
   .role-tb.role-choir { color: var(--c-choir); }
   .tb.on { color: var(--accent); }
+  .book-tb :global(svg) { width: 17px; height: 17px; display: block; }
   .follow-top { justify-content: space-between; padding-left: 14px; padding-right: 14px; }
   .exit { border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; font-size: 12.5px; color: var(--muted); }
   .wake-dot { color: var(--accent); font-size: 10px; }
@@ -386,6 +540,31 @@
   .speed-pill span { font-size: 12px; min-width: 28px; text-align: center; }
   .scrollwrap { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .reader { max-width: 560px; margin: 0 auto; padding: 18px 18px 40px; }
+
+  /* ── book mode: the reader becomes a horizontal multi-column flow that
+       .scrollwrap clips; flipping a page == scrollLeft += one viewport.
+       Page gutters: column-gap (2·M) between pages + a left page padding (M)
+       give an even M margin on both sides of every page. --col-* are set per
+       layout by relayout(). ── */
+  .view.book .scrollwrap { overflow: hidden; touch-action: manipulation; }
+  .view.book .reader {
+    max-width: none; margin: 0; height: 100%; box-sizing: border-box;
+    padding: 16px var(--col-pad, 24px);
+    column-width: var(--col-w, 100%);
+    column-gap: var(--col-gap, 48px);
+    column-fill: auto;
+  }
+  /* groups stay open + non-collapsible so pagination is stable; tapping a
+     heading flips the page like any other tap */
+  .view.book .pgroup summary { pointer-events: none; }
+  .view.book .ghead { break-after: avoid; }
+  .view.book .ghead .tog { display: none; }
+  .view.book .next-svc { break-inside: avoid; }
+  .page-num {
+    position: absolute; left: 0; right: 0; bottom: calc(7px + env(safe-area-inset-bottom));
+    text-align: center; font-size: 11px; letter-spacing: .05em; color: var(--muted);
+    pointer-events: none; z-index: 20;
+  }
   .pgroup summary { list-style: none; cursor: pointer; }
   .pgroup summary::-webkit-details-marker { display: none; }
   .ghead { color: var(--accent); font-size: calc(15px * var(--fs)); letter-spacing: .06em; margin: calc(26px * var(--fs)) 0 calc(12px * var(--fs)); text-align: center; }
