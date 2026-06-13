@@ -50,11 +50,17 @@
     <button class="badge" onclick={() => { roleSheetOpen = true; }} aria-label="როლის არჩევა">
       {$role ? roleName($role) : 'როლი —'}
     </button>
+    <button class="theme" onclick={toggleTheme} aria-label="თემა">{$theme === 'light' ? '☾' : '☀'}</button>
   </header>
   <p class="tagline">წესი და განგება მღვდელმთავრის მსახურებისა</p>
 
   {#if $needRefresh}
     <button class="upd" onclick={applyUpdate}>⟳ ხელმისაწვდომია ახალი ვერსია — განახლება</button>
+  {/if}
+  {#if installable || (!isStandalone() && isIOS())}
+    <div class="install-row">
+      <button class="install" onclick={install}>დააყენეთ ტელეფონზე</button>
+    </div>
   {/if}
   <button class="srch" onclick={() => { searchOpen = true; }}>⌕ ძიება ყველა ტექსტში…</button>
 
@@ -94,12 +100,6 @@
       {/each}
     </div>
 
-    <div class="foot-row">
-      {#if installable || (!isStandalone() && isIOS())}
-        <button class="install" onclick={install}>დააყენეთ ტელეფონზე</button>
-      {/if}
-      <button class="theme" onclick={toggleTheme} aria-label="თემა">{$theme === 'light' ? '☾' : '☀'}</button>
-    </div>
     <p class="foot">ტექსტი და თქვენი ადგილი ინახება ამ მოწყობილობაზე</p>
   {/if}
 
@@ -146,9 +146,9 @@
   .tile .nm { font-weight: 700; font-size: 14px; }
   .tile .ct { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .tile.soon { opacity: .55; }
-  .foot-row { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
-  .install { flex: 1; border: 1px solid var(--accent); color: var(--accent); border-radius: 10px; padding: 10px; font-weight: 600; }
-  .theme { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .theme { font-size: 15px; line-height: 1; border: 1px solid var(--line); background: var(--bg-sheet); border-radius: 99px; padding: 6px 10px; color: var(--muted); }
+  .install-row { display: flex; justify-content: center; margin-bottom: 16px; }
+  .install { border: 1px solid var(--accent); color: var(--accent); border-radius: 10px; padding: 10px 28px; font-weight: 600; }
   .foot { text-align: center; color: var(--muted); font-size: 11.5px; margin-top: 14px; }
   .err { text-align: center; padding: 40px 0; color: var(--muted); }
   .guide { position: fixed; inset: 0; z-index: 50; }
